@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'sign_up.dart';
+import 'user_store.dart';
+import 'reset_password.dart';
+import 'onboarding_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,6 +30,12 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   bool _obscurePassword = true;
 
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  String? _emailError;
+  String? _passwordError;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,43 +46,44 @@ class _SignInScreenState extends State<SignInScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 30),
+              const SizedBox(height: 55),
 
-              // Logo
-                  Center(
-  child: Row(
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.center,
-    children: [
-      Image.asset(
-        'assets/logo.png',
-        width: 45,
-        height: 45,
-      ),
-      const SizedBox(width: 1), 
-      const Text(
-        "SIGN IN",
-        style: TextStyle(
-          fontSize: 40,
-          fontWeight: FontWeight.bold,
-          color: Color.fromARGB(255, 24, 105, 172),
-        ),
-      ),
-    ],
-  ),
-),
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/logo.png',
+                      width: 45,
+                      height: 45,
+                    ),
+                    const SizedBox(width: 1),
+                    const Text(
+                      "SIGN IN",
+                      style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 24, 105, 172),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
               const SizedBox(height: 12),
 
               const Text(
                 "Sign In To Access Your Personalize\nLearning Journey",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Color.fromARGB(255, 94, 92, 92),
-                fontFamily: "Cali"),
+                style: TextStyle(
+                  color: Color.fromARGB(255, 94, 92, 92),
+                  fontFamily: "Cali",
+                ),
               ),
 
               const SizedBox(height: 20),
 
-              // Email
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -83,79 +94,129 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 1),
-              TextField(
-                      decoration: InputDecoration(
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color.fromARGB(255, 24, 105, 172), width: 3),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Colors.blue, width: 3),
-                        ),
-                      ),
-                    ),
-
-              const SizedBox(height: 10),
-
-              // Password
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Password",
-                  style: TextStyle(fontWeight: FontWeight.w500,
-                  color: Color.fromARGB(255, 24, 105, 172),),
-                ),
-              ),
-              TextField(
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color.fromARGB(255, 24, 105, 172), width: 3),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Colors.blue, width: 3),
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                        ),
-                      ),
-                    ),
 
               const SizedBox(height: 1),
 
-              // Forgot password
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    "Forgot Password?",
-                    style: TextStyle(color: Color.fromARGB(255, 94, 92, 92)),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  errorText: _emailError,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(
+                        color: Color.fromARGB(255, 24, 105, 172), width: 3),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide:
+                        const BorderSide(color: Colors.blue, width: 3),
                   ),
                 ),
               ),
 
+              const SizedBox(height: 10),
+
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Password",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: Color.fromARGB(255, 24, 105, 172),
+                  ),
+                ),
+              ),
+
+              TextField(
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
+                  errorText: _passwordError,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(
+                        color: Color.fromARGB(255, 24, 105, 172), width: 3),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide:
+                        const BorderSide(color: Colors.blue, width: 3),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 1),
+
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ResetPassword(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      "Forgot Password?",
+                      style: TextStyle(color: Color.fromARGB(255, 94, 92, 92)),
+                    ),
+                  ),
+                ),
+
               const SizedBox(height: 3),
 
-              // Sign In Button
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {},
+                 
+                  onPressed: () {
+                    setState(() {
+                      _emailError =
+                          _emailController.text.isEmpty ? "Email is required" : null;
+
+                      _passwordError =
+                          _passwordController.text.isEmpty ? "Password is required" : null;
+                    });
+
+                    if (_emailError == null && _passwordError == null) {
+                        bool success = UserStore.loginUser(
+                          email: _emailController.text,
+                          password: _passwordController.text,
+                        );
+
+                        if (success) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const OnboardingScreen(),
+                            ),
+                          );
+                        } else {
+                          setState(() {
+                            _emailError = "Invalid email or password";
+                            _passwordError = "Invalid email or password";
+                          });
+                        }
+                      }
+                  },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromARGB(255, 24, 105, 172),
+                    backgroundColor:
+                        const Color.fromARGB(255, 24, 105, 172),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -167,9 +228,9 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 25),
 
-// Divider with text
               Row(
                 children: const [
                   Expanded(child: Divider(thickness: 1)),
@@ -183,39 +244,41 @@ class _SignInScreenState extends State<SignInScreen> {
 
               const SizedBox(height: 20),
 
-              // Facebook Button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.facebook),
-                  label: const Text("Sign In with Facebook"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+             SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    onPressed: () {},
+                    icon: Image.asset(
+                      'assets/facebook.png',
+                      width: 21,
+                      height: 24,
+                    ),
+                    label: const Text("Sign In with Facebook"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromARGB(255, 24, 105, 172),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 15),
 
-              // Google Button
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: OutlinedButton.icon(
                   onPressed: () {},
                   icon: Image.asset(
-                    'assets/google.png', // make sure you have this icon
+                    'assets/google.png',
                     height: 20,
                   ),
                   label: const Text("Sign In with Google"),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.blue),
+                    side: const BorderSide(color: Color.fromARGB(255, 24, 105, 172)),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -225,23 +288,29 @@ class _SignInScreenState extends State<SignInScreen> {
 
               const SizedBox(height: 15),
 
-              // Sign up text
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Don't have an Account? "),
-                  GestureDetector(
-                    onTap: () {},
-                    child: const Text(
-                      "Sign Up here",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        decoration: TextDecoration.underline,
+             Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Don't have an Account? "),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SignUp(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        "Sign Up here",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
             ],
           ),
         ),
