@@ -25,7 +25,6 @@ class _ResetPasswordState extends State<ResetPassword> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -34,7 +33,6 @@ class _ResetPasswordState extends State<ResetPassword> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -63,7 +61,7 @@ class _ResetPasswordState extends State<ResetPassword> {
               const SizedBox(height: 10),
 
               const Text(
-                "Reset Your Password To Regain Access/nTo Your Learning Journey",
+                "Reset Your Password To Regain Access\nTo Your Learning Journey",
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Color.fromARGB(255, 94, 92, 92)),
               ),
@@ -76,12 +74,11 @@ class _ResetPasswordState extends State<ResetPassword> {
                 controller: _emailController,
                 hasError: _emailError != null,
               ),
-              if (_emailError != null)
-                _errorText(_emailError!),
+              if (_emailError != null) _errorText(_emailError!),
 
               const SizedBox(height: 10),
 
-              // PASSWORD
+              // NEW PASSWORD
               _buildLabel("New Password"),
               TextField(
                 controller: _passwordController,
@@ -102,8 +99,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                   ),
                 ),
               ),
-              if (_passwordError != null)
-                _errorText(_passwordError!),
+              if (_passwordError != null) _errorText(_passwordError!),
 
               const SizedBox(height: 10),
 
@@ -134,21 +130,20 @@ class _ResetPasswordState extends State<ResetPassword> {
 
               const SizedBox(height: 20),
 
+              // RESET BUTTON
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     setState(() {
-                      _emailError =
-                          _emailController.text.isEmpty
-                              ? "Email is required"
-                              : null;
+                      _emailError = _emailController.text.isEmpty
+                          ? "Email is required"
+                          : null;
 
-                      _passwordError =
-                          _passwordController.text.isEmpty
-                              ? "New password is required"
-                              : null;
+                      _passwordError = _passwordController.text.isEmpty
+                          ? "New password is required"
+                          : null;
 
                       _confirmPasswordError =
                           _confirmPasswordController.text.isEmpty
@@ -162,28 +157,25 @@ class _ResetPasswordState extends State<ResetPassword> {
                     if (_emailError == null &&
                         _passwordError == null &&
                         _confirmPasswordError == null) {
-
-                      bool updated = UserStore.updatePassword(
+                      bool updated = await UserStore.updatePassword(
                         email: _emailController.text,
                         newPassword: _passwordController.text,
                       );
 
-                      setState(() {
-                        if (!updated) {
+                      if (!updated) {
+                        setState(() {
                           _emailError = "Email not found";
-                        } else {
-                          _emailError = null;
-                        }
-                      });
-
-                      if (updated) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Password Reset Successful"),
-                          ),
-                        );
-                        Navigator.pop(context);
+                        });
+                        return;
                       }
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Password Reset Successful"),
+                        ),
+                      );
+
+                      Navigator.pop(context);
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -203,6 +195,8 @@ class _ResetPasswordState extends State<ResetPassword> {
       ),
     );
   }
+
+  // ================= HELPERS =================
 
   Widget _buildLabel(String text) {
     return Align(

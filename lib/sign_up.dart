@@ -82,7 +82,7 @@ class _SignUpState extends State<SignUp> {
               _buildLabel("Full Name"),
               _buildTextField(
                 controller: _fullNameController,
-                hasError: _fullNameError != null,
+                errorText: _fullNameError,
               ),
 
               const SizedBox(height: 1),
@@ -90,7 +90,7 @@ class _SignUpState extends State<SignUp> {
               _buildLabel("Email"),
               _buildTextField(
                 controller: _emailController,
-                hasError: _emailError != null,
+                errorText: _emailError,
               ),
 
               const SizedBox(height: 1),
@@ -100,7 +100,7 @@ class _SignUpState extends State<SignUp> {
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: _inputDecoration(
-                  hasError: _passwordError != null,
+                  errorText: _passwordError,
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
@@ -123,7 +123,7 @@ class _SignUpState extends State<SignUp> {
                 controller: _confirmPasswordController,
                 obscureText: _obscureConfirmPassword,
                 decoration: _inputDecoration(
-                  hasError: _confirmPasswordError != null,
+                  errorText: _confirmPasswordError,
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureConfirmPassword
@@ -183,6 +183,7 @@ class _SignUpState extends State<SignUp> {
                         email: _emailController.text,
                         password: _passwordController.text,
                       );
+                      UserStore.currentUserEmail = _emailController.text.trim();
                       Navigator.pop(context);
                     }
                   },
@@ -270,7 +271,6 @@ class _SignUpState extends State<SignUp> {
                       color: Color.fromARGB(255, 0, 0, 0),
                       fontWeight: FontWeight.w400,
                     )),
-                
               ),
             ],
           ),
@@ -294,55 +294,36 @@ class _SignUpState extends State<SignUp> {
 
   Widget _buildTextField({
     required TextEditingController controller,
-    bool hasError = false,
+    String? errorText,
   }) {
     return TextField(
       controller: controller,
-      decoration: _inputDecoration(hasError: hasError),
+      decoration: _inputDecoration(errorText: errorText),
     );
   }
 
   InputDecoration _inputDecoration({
-    bool hasError = false,
+    String? errorText,
     Widget? suffixIcon,
   }) {
     return InputDecoration(
-      errorText: null,
-
+      errorText: errorText,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide(
-          color: hasError
+          color: errorText != null
               ? Colors.red
               : const Color.fromARGB(255, 24, 105, 172),
           width: 3,
         ),
       ),
-
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide(
-          color: hasError ? Colors.red : Colors.blue,
+          color: errorText != null ? Colors.red : Colors.blue,
           width: 3,
         ),
       ),
-
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
-          color: Colors.red,
-          width: 3,
-        ),
-      ),
-
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
-          color: Colors.red,
-          width: 3,
-        ),
-      ),
-
       suffixIcon: suffixIcon,
     );
   }

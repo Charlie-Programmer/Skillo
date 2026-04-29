@@ -4,8 +4,10 @@ import 'user_store.dart';
 import 'reset_password.dart';
 import 'onboarding_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await UserStore.loadUsers();
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -104,7 +106,9 @@ class _SignInScreenState extends State<SignInScreen> {
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: const BorderSide(
-                        color: Color.fromARGB(255, 24, 105, 172), width: 3),
+                      color: Color.fromARGB(255, 24, 105, 172),
+                      width: 3,
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -135,7 +139,9 @@ class _SignInScreenState extends State<SignInScreen> {
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: const BorderSide(
-                        color: Color.fromARGB(255, 24, 105, 172), width: 3),
+                      color: Color.fromARGB(255, 24, 105, 172),
+                      width: 3,
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -159,23 +165,24 @@ class _SignInScreenState extends State<SignInScreen> {
 
               const SizedBox(height: 1),
 
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ResetPassword(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      "Forgot Password?",
-                      style: TextStyle(color: Color.fromARGB(255, 94, 92, 92)),
-                    ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ResetPassword(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    "Forgot Password?",
+                    style:
+                        TextStyle(color: Color.fromARGB(255, 94, 92, 92)),
                   ),
                 ),
+              ),
 
               const SizedBox(height: 3),
 
@@ -183,36 +190,40 @@ class _SignInScreenState extends State<SignInScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                 
-                  onPressed: () {
+                  onPressed: () async {
                     setState(() {
-                      _emailError =
-                          _emailController.text.isEmpty ? "Email is required" : null;
+                      _emailError = _emailController.text.isEmpty
+                          ? "Email is required"
+                          : null;
 
-                      _passwordError =
-                          _passwordController.text.isEmpty ? "Password is required" : null;
+                      _passwordError = _passwordController.text.isEmpty
+                          ? "Password is required"
+                          : null;
                     });
 
-                    if (_emailError == null && _passwordError == null) {
-                        bool success = UserStore.loginUser(
-                          email: _emailController.text,
-                          password: _passwordController.text,
-                        );
+                    if (_emailError == null &&
+                        _passwordError == null) {
+                      bool success = await UserStore.loginUser(
+                        email: _emailController.text,
+                        password: _passwordController.text,
+                      );
 
-                        if (success) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const OnboardingScreen(),
-                            ),
-                          );
-                        } else {
-                          setState(() {
-                            _emailError = "Invalid email or password";
-                            _passwordError = "Invalid email or password";
-                          });
-                        }
+                      if (success) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const OnboardingScreen(),
+                          ),
+                        );
+                      } else {
+                        setState(() {
+                          _emailError = "Invalid email or password";
+                          _passwordError =
+                              "Invalid email or password";
+                        });
                       }
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
@@ -244,26 +255,27 @@ class _SignInScreenState extends State<SignInScreen> {
 
               const SizedBox(height: 20),
 
-             SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: Image.asset(
-                      'assets/facebook.png',
-                      width: 21,
-                      height: 24,
-                    ),
-                    label: const Text("Sign In with Facebook"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color.fromARGB(255, 24, 105, 172),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  onPressed: () {},
+                  icon: Image.asset(
+                    'assets/facebook.png',
+                    width: 21,
+                    height: 24,
+                  ),
+                  label: const Text("Sign In with Facebook"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        Color.fromARGB(255, 24, 105, 172),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                 ),
+              ),
 
               const SizedBox(height: 15),
 
@@ -278,7 +290,9 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                   label: const Text("Sign In with Google"),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color.fromARGB(255, 24, 105, 172)),
+                    side: const BorderSide(
+                      color: Color.fromARGB(255, 24, 105, 172),
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -288,29 +302,30 @@ class _SignInScreenState extends State<SignInScreen> {
 
               const SizedBox(height: 15),
 
-             Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Don't have an Account? "),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SignUp(),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        "Sign Up here",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.underline,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("Don't have an Account? "),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SignUp(),
                         ),
+                      );
+                    },
+                    child: const Text(
+                      "Sign Up here",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        decoration:
+                            TextDecoration.underline,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'home.dart';
+import 'nav_bar.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -38,19 +40,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ),
   ];
 
-  void nextPage() {
-    if (currentIndex < pages.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    } else {
-            setState(() {
-        currentIndex = 0;
-        _pageController.jumpToPage(0);
-      });
-    }
-  }
+        void nextPage() {
+          if (currentIndex < pages.length - 1) {
+            _pageController.nextPage(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          } else {
+            // 
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const MainNavigation()),
+              (route) => false,
+            );
+          }
+        }
 
   Widget buildDot(int index) {
     return AnimatedContainer(
@@ -163,10 +166,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     /// SKIP BUTTON
                     TextButton(
                       onPressed: () {
-                        setState(() {
-                          currentIndex = pages.length - 1;
-                          _pageController.jumpToPage(pages.length - 1);
-                        });
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const MainNavigation()),
+                        );
                       },
                       child: const Text(
                         "Skip",
