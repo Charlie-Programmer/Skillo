@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home.dart';
 import 'nav_bar.dart';
+import 'user_store.dart'; // 👈 ADD THIS
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -40,20 +41,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ),
   ];
 
-        void nextPage() {
-          if (currentIndex < pages.length - 1) {
-            _pageController.nextPage(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
-          } else {
-            // 
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const MainNavigation()),
-              (route) => false,
-            );
-          }
-        }
+  // ✅ FIXED: make async
+  Future<void> nextPage() async {
+    if (currentIndex < pages.length - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      final user = await UserStore.getCurrentUser();
+      if (user != null) {
+        await UserStore.setOnboardingSeen(user["email"]!);
+      }
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainNavigation()),
+        (route) => false,
+      );
+    }
+  }
 
   Widget buildDot(int index) {
     return AnimatedContainer(
@@ -75,8 +81,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-
-
             /// PAGE VIEW
             Expanded(
               child: PageView.builder(
@@ -93,15 +97,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        /// IMAGE
-                        Image.asset(
-                          page.image,
-                          height: 280,
-                        ),
-
+                        Image.asset(page.image, height: 280),
                         const SizedBox(height: 40),
 
-                        /// TITLE
                         Text(
                           page.title,
                           textAlign: TextAlign.center,
@@ -114,11 +112,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                         const SizedBox(height: 12),
 
-                        /// SUBTITLE
                         Text(
                           page.subtitle,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 15,
                             color: Color.fromARGB(255, 94, 92, 92),
                           ),
@@ -130,7 +127,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            /// DOT INDICATOR
+            /// DOTS
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children:
@@ -139,46 +136,61 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
             const SizedBox(height: 30),
 
-            // CONTINUE BUTTON
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: nextPage,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          backgroundColor: const Color.fromARGB(255, 24, 105, 172),
-                          foregroundColor: Colors.white,
-                        ),
-                        child: Text(
-                          currentIndex == pages.length - 1
-                              ? "Get Started"
-                              : "Continue",
-                        ),
+            /// BUTTONS
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: nextPage,
+                      style: ElevatedButton.styleFrom(
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor:
+                            const Color.fromARGB(255, 24, 105, 172),
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text(
+                        currentIndex == pages.length - 1
+                            ? "Get Started"
+                            : "Continue",
                       ),
                     ),
+                  ),
 
-                    const SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
-                    /// SKIP BUTTON
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const MainNavigation()),
-                        );
-                      },
-                      child: const Text(
-                        "Skip",
-                        style: TextStyle(color: Color.fromARGB(255, 94, 92, 92)),
+                  /// ✅ FIXED SKIP BUTTON
+                  TextButton(
+                    onPressed: () async {
+                      final user =
+                          await UserStore.getCurrentUser();
+                      if (user != null) {
+                        await UserStore.setOnboardingSeen(
+                            user["email"]!);
+                      }
+
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const MainNavigation(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      "Skip",
+                      style: TextStyle(
+                        color:
+                            Color.fromARGB(255, 94, 92, 92),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
 
             const SizedBox(height: 30),
           ],
@@ -188,7 +200,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-/// MODEL CLASS
+/// MODEL
 class OnboardModel {
   final String image;
   final String title;

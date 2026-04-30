@@ -37,6 +37,7 @@ class UserStore {
         "email": item["email"] ?? "",
         "password": item["password"] ?? "",
         "fullName": item["fullName"] ?? "",
+        "hasSeenOnboarding": item["hasSeenOnboarding"] ?? "false",
       };
     }).toList();
   }
@@ -63,6 +64,7 @@ class UserStore {
       "email": email.trim(),
       "password": password,
       "fullName": fullName.trim(),
+      "hasSeenOnboarding": "false",
     });
 
     await _saveUsers();
@@ -138,6 +140,19 @@ class UserStore {
     if (currentUserEmail == null) return null;
 
     return await getUser(currentUserEmail!);
+  }
+
+    static Future<void> setOnboardingSeen(String email) async {
+    await loadUsers();
+
+    for (var user in users) {
+      if (user["email"] == email.trim()) {
+        user["hasSeenOnboarding"] = "true";
+        break;
+      }
+    }
+
+    await _saveUsers();
   }
 }
 

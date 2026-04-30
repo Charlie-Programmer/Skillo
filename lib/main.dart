@@ -3,6 +3,7 @@ import 'sign_up.dart';
 import 'user_store.dart';
 import 'reset_password.dart';
 import 'onboarding_screen.dart';
+import 'nav_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -209,13 +210,25 @@ class _SignInScreenState extends State<SignInScreen> {
                       );
 
                       if (success) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const OnboardingScreen(),
-                          ),
-                        );
+                        final user = await UserStore.getCurrentUser();
+
+                        if (user?["hasSeenOnboarding"] == "true") {
+                          // 👇 NOT FIRST TIME → GO DIRECT HOME
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const MainNavigation(),
+                            ),
+                          );
+                        } else {
+                          // 👇 FIRST TIME → SHOW ONBOARDING
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const OnboardingScreen(),
+                            ),
+                          );
+                        }
                       } else {
                         setState(() {
                           _emailError = "Invalid email or password";
