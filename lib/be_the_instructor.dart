@@ -1,78 +1,106 @@
-
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'user_store.dart'; // 👈 IMPORT YOUR USER STORE
 
 class BeTheInstructorPage extends StatefulWidget {
   const BeTheInstructorPage({super.key});
 
   @override
-  State<BeTheInstructorPage> createState() => _BeTheInstructorPageState();
+  State<BeTheInstructorPage> createState() =>
+      _BeTheInstructorPageState();
 }
 
-class _BeTheInstructorPageState extends State<BeTheInstructorPage> {
+class _BeTheInstructorPageState
+    extends State<BeTheInstructorPage> {
   int currentStep = 0;
-
-  final _formKey = GlobalKey<FormState>();
+  bool showErrors = false;
 
   // Step 1
-  final TextEditingController fullNameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
+  final fullNameController = TextEditingController();
+  final emailController = TextEditingController();
   String? education;
-  final TextEditingController experienceController = TextEditingController();
+  final experienceController = TextEditingController();
 
   // Step 2
-  String? resumeFileName;
-  String? resumePath;
+  PlatformFile? resumeFile;
 
   // Step 3
-  final TextEditingController skillsController = TextEditingController();
-  final TextEditingController teachingExpController = TextEditingController();
-  final TextEditingController bioController = TextEditingController();
+  final skillsController = TextEditingController();
+  final teachingExpController = TextEditingController();
+  final bioController = TextEditingController();
+
+  // ✅ LOAD CURRENT USER
+  @override
+  void initState() {
+    super.initState();
+    loadCurrentUser();
+  }
+
+  Future<void> loadCurrentUser() async {
+    final user = await UserStore.getCurrentUser();
+
+    if (user != null) {
+      setState(() {
+        fullNameController.text = user["fullName"] ?? "";
+        emailController.text = user["email"] ?? "";
+      });
+    }
+  }
+
+  Future<void> pickResume() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'doc', 'docx'],
+    );
+
+    if (result != null) {
+      setState(() => resumeFile = result.files.first);
+    }
+  }
+
+  // ================= VALIDATION =================
+
+  bool validateStep0() {
+    return fullNameController.text.trim().isNotEmpty &&
+        emailController.text.contains("@") &&
+        education != null &&
+        experienceController.text.trim().isNotEmpty;
+  }
+
+  bool validateStep1() {
+    return resumeFile != null;
+  }
+
+  bool validateStep2() {
+    return skillsController.text.trim().isNotEmpty &&
+        teachingExpController.text.trim().isNotEmpty &&
+        bioController.text.trim().isNotEmpty;
+  }
 
   void nextStep() {
-    if (!_formKey.currentState!.validate()) return;
+    setState(() => showErrors = true);
+
+    if (currentStep == 0 && !validateStep0()) return;
+    if (currentStep == 1 && !validateStep1()) return;
+    if (currentStep == 2 && !validateStep2()) return;
 
     if (currentStep < 2) {
-      setState(() => currentStep++);
+      setState(() {
+        currentStep++;
+        showErrors = false;
+      });
     } else {
       submitForm();
     }
   }
 
-  void prevStep() {
-    if (currentStep > 0) {
-      setState(() => currentStep--);
-    }
-  }
-
-  Future<void> pickResume() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx'],
-      );
-
-      if (result != null) {
-        setState(() {
-          resumeFileName = result.files.single.name;
-          resumePath = result.files.single.path;
-        });
-      }
-    } catch (e) {
-      debugPrint("File pick error: $e");
-    }
-  }
-
   void submitForm() {
-    if (!_formKey.currentState!.validate()) return;
-
     final data = {
       "fullName": fullNameController.text,
       "email": emailController.text,
       "education": education,
       "experience": experienceController.text,
-      "resumeFileName": resumeFileName,
-      "resumePath": resumePath,
+      "resume": resumeFile?.name,
       "skills": skillsController.text,
       "teachingExperience": teachingExpController.text,
       "bio": bioController.text,
@@ -81,50 +109,46 @@ class _BeTheInstructorPageState extends State<BeTheInstructorPage> {
     debugPrint("Submitted Data: $data");
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Application Submitted Successfully!")),
+      const SnackBar(
+        content: Text("Application Submitted Successfully!"),
+      ),
     );
   }
 
-  // ✅ UPDATED INPUT STYLE (YOUR DESIGN)
-  InputDecoration input(String label) {
+  // ================= INPUT DESIGN =================
+
+  InputDecoration input(
+    String label, {
+    required bool hasError,
+    String? errorText,
+  }) {
     return InputDecoration(
       labelText: label,
       filled: true,
       fillColor: Colors.grey.shade50,
-
+      errorText: hasError ? errorText : null,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
-          color: Color.fromARGB(255, 24, 105, 172),
-          width: 3,
-        ),
-      ),
-
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
-          color: Color.fromARGB(255, 24, 105, 172),
-          width: 3,
-        ),
-      ),
-
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
-          color: Colors.red,
+        borderSide: BorderSide(
+          color: hasError
+              ? Colors.red
+              : const Color.fromARGB(255, 24, 105, 172),
           width: 2,
         ),
       ),
-
-      focusedErrorBorder: OutlineInputBorder(
+      focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
-          color: Colors.red,
+        borderSide: BorderSide(
+          color: hasError
+              ? Colors.red
+              : const Color.fromARGB(255, 24, 105, 172),
           width: 3,
         ),
       ),
     );
   }
+
+  // ================= STEP BOX =================
 
   Widget stepBox({
     required int step,
@@ -161,7 +185,8 @@ class _BeTheInstructorPageState extends State<BeTheInstructorPage> {
                     : const Color.fromARGB(255, 24, 105, 172),
                 child: Text(
                   "${step + 1}",
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                  style: const TextStyle(
+                      color: Colors.white, fontSize: 12),
                 ),
               ),
               const SizedBox(width: 10),
@@ -183,89 +208,157 @@ class _BeTheInstructorPageState extends State<BeTheInstructorPage> {
     );
   }
 
+  // ================= STEP 1 =================
+
   Widget buildBasicInfo() {
     return Column(
       children: [
-        TextFormField(
+        TextField(
           controller: fullNameController,
-          decoration: input("Full Name"),
-          validator: (v) =>
-              v == null || v.trim().isEmpty ? "Full name required" : null,
+          readOnly: true,
+          decoration: input(
+            "Full Name",
+            hasError:
+                showErrors && fullNameController.text.isEmpty,
+            errorText: "Full name is required",
+          ),
         ),
         const SizedBox(height: 10),
-        TextFormField(
+        TextField(
           controller: emailController,
-          decoration: input("Email"),
-          validator: (v) =>
-              v == null || !v.contains("@") ? "Invalid email" : null,
+          readOnly: true,
+          decoration: input(
+            "Email",
+            hasError:
+                showErrors && !emailController.text.contains("@"),
+            errorText: "Enter valid email",
+          ),
         ),
+        const SizedBox(height: 10,),
         const SizedBox(height: 10),
-        DropdownButtonFormField<String>(
-          value: education,
-          decoration: input("Highest Education"),
-          items: const [
-            DropdownMenuItem(value: "High School", child: Text("High School")),
-            DropdownMenuItem(value: "Bachelor", child: Text("Bachelor")),
-            DropdownMenuItem(value: "Master", child: Text("Master")),
-            DropdownMenuItem(value: "PhD", child: Text("PhD")),
-          ],
-          onChanged: (v) => setState(() => education = v),
-        ),
+            DropdownButtonFormField<String>(
+              value: education,
+              decoration: input(
+                "Highest Education",
+                hasError: showErrors && education == null,
+                errorText: "Select education",
+              ).copyWith(
+                fillColor: Colors.white, // 👈 white background
+                filled: true,
+              ),
+              items: const [
+                DropdownMenuItem(
+                    value: "High School", child: Text("High School")),
+                DropdownMenuItem(
+                    value: "Bachelor", child: Text("Bachelor")),
+                DropdownMenuItem(
+                    value: "Master", child: Text("Master")),
+                DropdownMenuItem(value: "PhD", child: Text("PhD")),
+              ],
+              onChanged: (v) => setState(() => education = v),
+            ),
         const SizedBox(height: 10),
-        TextFormField(
+        TextField(
           controller: experienceController,
-          decoration: input("Experience (Years)"),
+          decoration: input(
+            "Experience (Years)",
+            hasError: showErrors &&
+                experienceController.text.isEmpty,
+            errorText: "Experience is required",
+          ),
         ),
       ],
     );
   }
 
+  // ================= STEP 2 =================
+
   Widget buildResumeUpload() {
-    return GestureDetector(
-      onTap: pickResume,
-      child: Container(
-        height: 140,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color.fromARGB(255, 24, 105, 172), width: 3),
-          borderRadius: BorderRadius.circular(12),
-          color: Colors.grey.shade50,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ElevatedButton.icon(
+          onPressed: pickResume,
+          icon: const Icon(Icons.upload_file),
+          label: const Text("Upload Resume"),
         ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.upload_file, size: 40),
-              const SizedBox(height: 10),
-              Text(resumeFileName ?? "Tap to upload Resume (Optional)"),
-            ],
+        const SizedBox(height: 10),
+        Text(
+          resumeFile != null
+              ? "Selected: ${resumeFile!.name}"
+              : "Resume is required",
+          style: TextStyle(
+            color: showErrors && resumeFile == null
+                ? Colors.red
+                : Colors.green,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ================= STEP 3 =================
+
+  Widget buildMoreDetails() {
+    return Column(
+      children: [
+        TextField(
+          controller: skillsController,
+          decoration: input(
+            "Skills",
+            hasError:
+                showErrors && skillsController.text.isEmpty,
+            errorText: "Skills required",
+          ),
+        ),
+        const SizedBox(height: 10),
+        TextField(
+          controller: teachingExpController,
+          decoration: input(
+            "Teaching Experience",
+            hasError: showErrors &&
+                teachingExpController.text.isEmpty,
+            errorText: "Teaching experience required",
+          ),
+        ),
+        const SizedBox(height: 10),
+        TextField(
+          controller: bioController,
+          maxLines: 4,
+          decoration: input(
+            "Short Bio",
+            hasError:
+                showErrors && bioController.text.isEmpty,
+            errorText: "Bio required",
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget buildButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        onPressed: nextStep,
+        style: ElevatedButton.styleFrom(
+          backgroundColor:
+              const Color.fromARGB(255, 24, 105, 172),
+        ),
+        child: Text(
+          currentStep == 2 ? "SUBMIT" : "NEXT",
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
       ),
     );
   }
 
-  Widget buildMoreDetails() {
-    return Column(
-      children: [
-        TextFormField(
-          controller: skillsController,
-          decoration: input("Skills"),
-        ),
-        const SizedBox(height: 10),
-        TextFormField(
-          controller: teachingExpController,
-          decoration: input("Teaching Experience"),
-        ),
-        const SizedBox(height: 10),
-        TextFormField(
-          controller: bioController,
-          maxLines: 4,
-          decoration: input("Short Bio"),
-        ),
-      ],
-    );
-  }
+  // ================= UI =================
 
   @override
   Widget build(BuildContext context) {
@@ -282,32 +375,23 @@ class _BeTheInstructorPageState extends State<BeTheInstructorPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
+        child: SingleChildScrollView(
           child: Column(
             children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      stepBox(step: 0, title: "Basic Info", child: buildBasicInfo()),
-                      stepBox(step: 1, title: "Resume", child: buildResumeUpload()),
-                      stepBox(step: 2, title: "More Details", child: buildMoreDetails()),
-                    ],
-                  ),
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (currentStep > 0)
-                    ElevatedButton(onPressed: prevStep, child: const Text("Back")),
-                  ElevatedButton(
-                    onPressed: nextStep,
-                    child: Text(currentStep == 2 ? "Submit" : "Next"),
-                  ),
-                ],
-              ),
+              stepBox(
+                  step: 0,
+                  title: "Basic Info",
+                  child: buildBasicInfo()),
+              stepBox(
+                  step: 1,
+                  title: "Resume",
+                  child: buildResumeUpload()),
+              stepBox(
+                  step: 2,
+                  title: "More Details",
+                  child: buildMoreDetails()),
+              const SizedBox(height: 20),
+              buildButton(),
             ],
           ),
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:skillo/home.dart';
 import 'user_store.dart';
 import 'main.dart';
 import 'be_the_instructor.dart';
