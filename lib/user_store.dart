@@ -38,6 +38,8 @@ class UserStore {
         "password": item["password"] ?? "",
         "fullName": item["fullName"] ?? "",
         "hasSeenOnboarding": item["hasSeenOnboarding"] ?? "false",
+        "profileImage": item["profileImage"] ?? "",
+        "role": item["role"] ?? "Student",
       };
     }).toList();
   }
@@ -65,6 +67,8 @@ class UserStore {
       "password": password,
       "fullName": fullName.trim(),
       "hasSeenOnboarding": "false",
+      "profileImage": "",
+      "role": "Student",
     });
 
     await _saveUsers();
@@ -148,6 +152,39 @@ class UserStore {
     for (var user in users) {
       if (user["email"] == email.trim()) {
         user["hasSeenOnboarding"] = "true";
+        break;
+      }
+    }
+
+    await _saveUsers();
+  }
+
+  static Future<void> updateProfileImage({
+  required String email,
+  required String imagePath,
+}) async {
+  await loadUsers();
+
+  for (var user in users) {
+    if (user["email"] == email.trim()) {
+      user["profileImage"] = imagePath;
+      break;
+    }
+  }
+
+  await _saveUsers();
+}
+
+ //user role update
+  static Future<void> updateUserRole({
+    required String email,
+    required String role,
+  }) async {
+    await loadUsers();
+
+    for (var user in users) {
+      if (user["email"] == email.trim()) {
+        user["role"] = role;
         break;
       }
     }

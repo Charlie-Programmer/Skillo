@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:skillo/home.dart';
 import 'user_store.dart';
 import 'main.dart';
 import 'be_the_instructor.dart';
@@ -16,6 +15,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String fullName = "Guest";
   String email = "No email";
+  String role = "Student";
 
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
@@ -33,19 +33,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         fullName = user["fullName"] ?? "No Name";
         email = user["email"] ?? "No Email";
+        role = user["role"] ?? "Student";
+        
+          if (user["profileImage"] != null &&
+            user["profileImage"]!.isNotEmpty) {
+          _profileImage = File(user["profileImage"]!);
+        }
       });
     }
   }
 
-  Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      Future<void> _pickImage() async {
+        final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
-    if (pickedFile != null) {
-      setState(() {
-        _profileImage = File(pickedFile.path);
-      });
-    }
-  }
+        if (pickedFile != null) {
+          // ✅ update UI only
+          setState(() {
+            _profileImage = File(pickedFile.path);
+          });
+
+          // ✅ save image AFTER setState
+          if (UserStore.currentUserEmail != null) {
+            await UserStore.updateProfileImage(
+              email: UserStore.currentUserEmail!,
+              imagePath: pickedFile.path,
+            );
+          }
+        }
+      }
 
   @override
   Widget build(BuildContext context) {
@@ -114,10 +129,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        "Student",
-                        style: TextStyle(color: Colors.grey),
-                      ),
+                     Text(
+                      role,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
                       const SizedBox(height: 5),
 
                       Text(
@@ -147,18 +162,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               const SizedBox(height: 1),
 
-              _menuItem(
+                _menuItem(
                   Icons.school,
-                  "Be the Instructor",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const BeTheInstructorPage(),
-                      ),
-                    );
-                  },
-                ),
+                  role == "Instructor"
+                      ? "Be the Student"
+                      : "Be the Instructor",
+              onTap: () async {
+                if (UserStore.currentUserEmail == null) return;
+
+                // 
+                if (role == "Instructor") {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("You are already an Instructor."),
+                    ),
+                  );
+                  return;
+                }
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BeTheInstructorPage(),
+                  ),
+                ).then((_) async {
+                  await Future.delayed(const Duration(milliseconds: 150));
+                  if (mounted) loadUser();
+                });
+              }
+            ),
               _menuItem(Icons.credit_card, "Payment Method"),
               _menuItem(Icons.menu_book, "My Certificates"),
               _menuItem(Icons.headphones, "Help Center"),

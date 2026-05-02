@@ -94,26 +94,33 @@ class _BeTheInstructorPageState
     }
   }
 
-  void submitForm() {
-    final data = {
-      "fullName": fullNameController.text,
-      "email": emailController.text,
-      "education": education,
-      "experience": experienceController.text,
-      "resume": resumeFile?.name,
-      "skills": skillsController.text,
-      "teachingExperience": teachingExpController.text,
-      "bio": bioController.text,
-    };
+void submitForm() async {
+  final data = {
+    "fullName": fullNameController.text,
+    "email": emailController.text,
+    "education": education,
+    "experience": experienceController.text,
+    "resume": resumeFile?.name,
+    "skills": skillsController.text,
+    "teachingExperience": teachingExpController.text,
+    "bio": bioController.text,
+  };
 
-    debugPrint("Submitted Data: $data");
+  await UserStore.updateUserRole(
+    email: emailController.text,
+    role: "Instructor",
+  );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Application Submitted Successfully!"),
-      ),
-    );
-  }
+  if (!mounted) return;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Application Submitted Successfully!")),
+  );
+
+  await Future.delayed(const Duration(milliseconds: 200));
+
+  Navigator.pop(context);
+}
 
   // ================= INPUT DESIGN =================
 
@@ -238,12 +245,14 @@ class _BeTheInstructorPageState
         const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: education,
+              dropdownColor: Colors.white, // 👈 background of dropdown menu
+              iconEnabledColor: const Color.fromARGB(255, 24, 105, 172),
               decoration: input(
                 "Highest Education",
                 hasError: showErrors && education == null,
                 errorText: "Select education",
               ).copyWith(
-                fillColor: Colors.white, // 👈 white background
+                fillColor: Colors.white, 
                 filled: true,
               ),
               items: const [
