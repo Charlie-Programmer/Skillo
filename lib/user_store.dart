@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserStore {
   static List<Map<String, String>> users = [];
@@ -191,5 +192,13 @@ class UserStore {
 
     await _saveUsers();
   }
+
+  static Future<void> clearCurrentUser() async {
+  currentUserEmail = null;
+
+  // If you're using SharedPreferences:
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove("currentUserEmail");
+}
 }
 

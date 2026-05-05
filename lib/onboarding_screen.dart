@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'home.dart';
 import 'nav_bar.dart';
 import 'user_store.dart'; // 👈 ADD THIS
 

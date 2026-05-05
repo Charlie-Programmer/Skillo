@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'home.dart';
 import 'library.dart';
 import 'messages.dart';
-import 'profile.dart';
+import 'profile_router.dart';
 
 
 class MainNavigation extends StatefulWidget {
@@ -20,7 +20,7 @@ class _MainNavigationState extends State<MainNavigation> {
     HomeScreen(),
     LibraryScreen(),
     MessagesScreen(),
-    ProfileScreen(),
+    ProfileRouter(),
   ];
 
   @override

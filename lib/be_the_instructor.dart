@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'user_store.dart'; // 👈 IMPORT YOUR USER STORE
+import 'nav_bar.dart';
 
 class BeTheInstructorPage extends StatefulWidget {
   const BeTheInstructorPage({super.key});
@@ -95,17 +96,6 @@ class _BeTheInstructorPageState
   }
 
 void submitForm() async {
-  final data = {
-    "fullName": fullNameController.text,
-    "email": emailController.text,
-    "education": education,
-    "experience": experienceController.text,
-    "resume": resumeFile?.name,
-    "skills": skillsController.text,
-    "teachingExperience": teachingExpController.text,
-    "bio": bioController.text,
-  };
-
   await UserStore.updateUserRole(
     email: emailController.text,
     role: "Instructor",
@@ -119,7 +109,13 @@ void submitForm() async {
 
   await Future.delayed(const Duration(milliseconds: 200));
 
-  Navigator.pop(context);
+ Navigator.pushAndRemoveUntil(
+  context,
+  MaterialPageRoute(
+    builder: (context) => const MainNavigation(),
+  ),
+  (route) => false,
+);
 }
 
   // ================= INPUT DESIGN =================
