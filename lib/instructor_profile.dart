@@ -3,6 +3,11 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'user_store.dart';
 import 'main.dart';
+import 'payment_method.dart';
+import 'help_center.dart';
+import 'my_certificate.dart';
+import 'my_courses.dart';
+import 'course_analytics.dart';
 
 
 class InstructorProfileScreen extends StatefulWidget {
@@ -19,6 +24,7 @@ class _InstructorProfileScreenState extends State<InstructorProfileScreen> {
   String role = "";
   String bio = "";
   String expertise = "";
+  String selectedMethod = "card";
 
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
@@ -162,12 +168,78 @@ class _InstructorProfileScreenState extends State<InstructorProfileScreen> {
               const Divider(),
               const SizedBox(height: 1),
 
-              _menuItem(Icons.menu_book, "My Courses", onTap: () {}),
-              _menuItem(Icons.bar_chart, "Course Analytics", onTap: () {}),
-              _menuItem(Icons.rate_review, "Student Reviews", onTap: () {}),
-              _menuItem(Icons.credit_card, "Payment Method", onTap: () {}),
-              _menuItem(Icons.menu_book, "My Certificates"),
-              _menuItem(Icons.headphones, "Help Center", onTap: () {}),
+              _menuItem(
+                Icons.menu_book,
+                "My Courses",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MyCoursesPage(),
+                    ),
+                  );
+                },
+              ),
+
+              _menuItem(
+                Icons.bar_chart,
+                "Course Analytics",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CourseAnalyticsPage(),
+                    ),
+                  );
+                },
+              ),
+
+               _menuItem(
+                Icons.credit_card,
+                "Payment Method",
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PaymentMethodPage(
+                        initialMethod: selectedMethod,
+                      ),
+                    ),
+                  );
+
+                  if (result != null) {
+                    setState(() {
+                      selectedMethod = result;
+                    });
+                  }
+                },
+              ),
+
+              _menuItem(
+                Icons.menu_book,
+                "My Certificates",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MyCertificatePage(),
+                    ),
+                  );
+                },
+              ),
+
+              _menuItem(
+                Icons.headphones,
+                "Help Center",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HelpCenterPage(),
+                    ),
+                  );
+                },
+              ),
 
               _menuItem(Icons.logout, "Log out", 
                onTap: () async {

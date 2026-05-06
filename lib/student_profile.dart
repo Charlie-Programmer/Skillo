@@ -5,6 +5,9 @@ import 'user_store.dart';
 import 'main.dart';
 import 'be_the_instructor.dart';
 import 'instructor_profile.dart';
+import 'payment_method.dart';
+import 'help_center.dart';
+import 'my_certificate.dart';
 
 
 class ProfileScreen extends StatefulWidget {
@@ -18,6 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String fullName = "Guest";
   String email = "No email";
   String role = "";
+  String selectedMethod = "card";
 
   bool get isInstructor => role == "Instructor";
   File? _profileImage;
@@ -184,10 +188,53 @@ void loadUser() async {
                     }
                   }
                 ),
-              _menuItem(Icons.credit_card, "Payment Method"),
-              _menuItem(Icons.menu_book, "My Certificates"),
-              _menuItem(Icons.headphones, "Help Center"),
-              _menuItem(Icons.send, "Invite Friends"),
+
+              _menuItem(
+                Icons.credit_card,
+                "Payment Method",
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PaymentMethodPage(
+                        initialMethod: selectedMethod,
+                      ),
+                    ),
+                  );
+
+                  if (result != null) {
+                    setState(() {
+                      selectedMethod = result;
+                    });
+                  }
+                },
+              ),
+
+              _menuItem(
+                Icons.menu_book,
+                "My Certificates",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MyCertificatePage(),
+                    ),
+                  );
+                },
+              ),
+
+              _menuItem(
+                Icons.headphones,
+                "Help Center",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HelpCenterPage(),
+                    ),
+                  );
+                },
+              ),
 
               _menuItem(Icons.logout, "Log out", onTap: () async {
 

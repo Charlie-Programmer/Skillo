@@ -69,6 +69,10 @@ flutter:
     - assets/slide2.png
     - assets/slide3.png
     - assets/slide4.png
+    - assets/visa.png
+    - assets/mastercard.png
+    - assets/paypal.png
+    - assets/maestro.png
 
 
 

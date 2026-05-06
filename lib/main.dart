@@ -44,6 +44,7 @@ class _SignInScreenState extends State<SignInScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
+        child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
@@ -343,6 +344,7 @@ class _SignInScreenState extends State<SignInScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }

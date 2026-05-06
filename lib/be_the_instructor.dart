@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'user_store.dart'; // 👈 IMPORT YOUR USER STORE
+import 'user_store.dart'; 
 import 'nav_bar.dart';
 
 class BeTheInstructorPage extends StatefulWidget {
