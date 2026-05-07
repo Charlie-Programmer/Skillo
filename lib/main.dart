@@ -4,11 +4,17 @@ import 'user_store.dart';
 import 'reset_password.dart';
 import 'onboarding_screen.dart';
 import 'nav_bar.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await UserStore.loadUsers();
-  runApp(MyApp());
+  await Hive.initFlutter();
+
+  await Hive.openBox('coursesBox');
+
+  await UserStore.restoreSession();
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -42,7 +48,7 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F6FA),
       body: SafeArea(
         child: SingleChildScrollView(
         child: Padding(

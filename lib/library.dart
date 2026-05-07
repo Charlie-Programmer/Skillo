@@ -15,7 +15,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
 return Container(
-  color: Colors.white,
+  color: const Color(0xFFF5F6FA),
   child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),

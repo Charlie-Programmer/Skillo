@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import "user_store.dart";
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:hive/hive.dart';
+
 
 class CreateCoursePage extends StatefulWidget {
   const CreateCoursePage({super.key});
@@ -327,13 +330,30 @@ class _CreateCoursePageState extends State<CreateCoursePage> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Course Created Successfully!"),
-                      ),
-                    );
-                  },
+                  onPressed: () async {
+                      final box = Hive.box('coursesBox');
+
+                      final email = UserStore.currentUserEmail;
+
+                      if (email == null) return;
+
+                      final newCourse = {
+                        "title": titleController.text,
+                        "description": descriptionController.text,
+                        "category": selectedCategory,
+                        "price": priceController.text,
+                        "image": _courseImage?.path ?? "",
+                        "rating": 0.0,
+                        "enrolled": 0,
+
+                        // ⭐ IMPORTANT LINE (OWNER)
+                        "email": email,
+                      };
+
+                      await box.add(newCourse);
+
+                      Navigator.pop(context);
+                    },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
                         const Color.fromARGB(255, 24, 105, 172),

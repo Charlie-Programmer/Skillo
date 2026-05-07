@@ -91,6 +91,9 @@ class UserStore {
       // 👇 ADD THIS LINE
       currentUserEmail = email.trim();
 
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString("currentUserEmail", currentUserEmail!);
+
       return true;
     }
   }
@@ -200,5 +203,11 @@ class UserStore {
   final prefs = await SharedPreferences.getInstance();
   await prefs.remove("currentUserEmail");
 }
+
+  static Future<void> restoreSession() async {
+  final prefs = await SharedPreferences.getInstance();
+  currentUserEmail = prefs.getString("currentUserEmail");
+}
+
 }
 
