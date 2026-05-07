@@ -27,7 +27,7 @@ return Container(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: const [
                   Text(
-                    "My Courses",
+                    "My Library",
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,

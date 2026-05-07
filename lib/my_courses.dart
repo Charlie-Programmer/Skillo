@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'nav_bar.dart';
+import 'create_course.dart';
 
 class MyCoursesPage extends StatelessWidget {
   const MyCoursesPage({super.key});
@@ -89,7 +89,7 @@ class MyCoursesPage extends StatelessWidget {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const MainNavigation(),
+                        builder: (context) => const CreateCoursePage(),
                       ),
                     );
                   },
