@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'user_store.dart';
 import 'main.dart';
-import 'payment_method.dart';
 import 'help_center.dart';
 import 'my_certificate.dart';
 import 'my_courses.dart';
@@ -191,27 +190,6 @@ class _InstructorProfileScreenState extends State<InstructorProfileScreen> {
                       builder: (context) => const CourseAnalyticsPage(),
                     ),
                   );
-                },
-              ),
-
-               _menuItem(
-                Icons.credit_card,
-                "Payment Method",
-                onTap: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PaymentMethodPage(
-                        initialMethod: selectedMethod,
-                      ),
-                    ),
-                  );
-
-                  if (result != null) {
-                    setState(() {
-                      selectedMethod = result;
-                    });
-                  }
                 },
               ),
 

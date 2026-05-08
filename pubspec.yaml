@@ -76,6 +76,7 @@ flutter:
     - assets/mastercard.png
     - assets/paypal.png
     - assets/maestro.png
+    - assets/success.png
 
 
 

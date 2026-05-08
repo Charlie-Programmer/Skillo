@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'user_store.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -48,38 +49,36 @@ class _NotificationPageState extends State<NotificationPage> {
               const SizedBox(height: 10),
 
               
-             Expanded(
-                child: Builder(
-                  builder: (context) {
-                    final box = Hive.box('notificationsBox');
+              Expanded(
+                child: ValueListenableBuilder(
+                  valueListenable: Hive.box('notificationsBox').listenable(),
+                  builder: (context, Box box, _) {
+                    final userEmail = UserStore.currentUserEmail;
 
-                    return ValueListenableBuilder(
-                      valueListenable: box.listenable(),
-                      builder: (context, Box box, _) {
-                        final notifications = box.values.toList();
+                    final notifications = box.values
+                        .where((notif) => notif["user"] == userEmail)
+                        .toList();
 
-                        if (notifications.isEmpty) {
-                          return _buildEmptyState(context);
-                        }
+                    if (notifications.isEmpty) {
+                      return _buildEmptyState(context);
+                    }
 
-                        return ListView.builder(
-                          itemCount: notifications.length,
-                          itemBuilder: (context, index) {
-                            final notif = notifications[index];
+                    return ListView.builder(
+                      itemCount: notifications.length,
+                      itemBuilder: (context, index) {
+                        final notif = notifications[index];
 
-                            return Card(
-                              color: Colors.white,
-                              margin: const EdgeInsets.only(bottom: 10),
-                              child: ListTile(
-                                leading: const Icon(
-                                  Icons.notifications_active,
-                                  color: Color.fromARGB(255, 24, 105, 172),
-                                ),
-                                title: Text(notif["title"] ?? ""),
-                                subtitle: Text(notif["subtitle"] ?? ""),
-                              ),
-                            );
-                          },
+                        return Card(
+                          color: Colors.white,
+                          margin: const EdgeInsets.only(bottom: 10),
+                          child: ListTile(
+                            leading: const Icon(
+                              Icons.notifications_active,
+                              color: Color.fromARGB(255, 24, 105, 172),
+                            ),
+                            title: Text(notif["title"] ?? ""),
+                            subtitle: Text(notif["subtitle"] ?? ""),
+                          ),
                         );
                       },
                     );

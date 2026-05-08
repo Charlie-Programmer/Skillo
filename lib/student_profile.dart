@@ -5,7 +5,6 @@ import 'user_store.dart';
 import 'main.dart';
 import 'be_the_instructor.dart';
 import 'instructor_profile.dart';
-import 'payment_method.dart';
 import 'help_center.dart';
 import 'my_certificate.dart';
 
@@ -188,27 +187,6 @@ void loadUser() async {
                     }
                   }
                 ),
-
-              _menuItem(
-                Icons.credit_card,
-                "Payment Method",
-                onTap: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PaymentMethodPage(
-                        initialMethod: selectedMethod,
-                      ),
-                    ),
-                  );
-
-                  if (result != null) {
-                    setState(() {
-                      selectedMethod = result;
-                    });
-                  }
-                },
-              ),
 
               _menuItem(
                 Icons.menu_book,

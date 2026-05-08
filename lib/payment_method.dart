@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'success_payment.dart';
 
 class PaymentMethodPage extends StatefulWidget {
+  final Map course; // ✅ add this
   final String initialMethod;
 
   const PaymentMethodPage({
     super.key,
-    required this.initialMethod,
+    required this.course,
+    this.initialMethod = "card",
   });
 
   @override
@@ -130,8 +133,14 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () {
-                   
-                    Navigator.pop(context, selectedMethod);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SuccessPayment(
+                          course: widget.course,
+                        ),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromARGB(255, 24, 105, 172),

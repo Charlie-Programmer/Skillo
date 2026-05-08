@@ -105,11 +105,12 @@ void submitForm() async {
     // ✅ ADD NOTIFICATION HERE
   final box = Hive.box('notificationsBox');
 
-  await box.add({
-    "title": "Instructor Approved 🎉",
-    "subtitle": "Congratulations! You are now an Instructor.",
-    "time": DateTime.now().toString(),
-  });
+    await box.add({
+      "user": UserStore.currentUserEmail,
+      "title": "Instructor Approved 🎉",
+      "subtitle": "Congratulations! You are now an Instructor.",
+      "time": DateTime.now().toString(),
+    });
 
   await box.flush();
 

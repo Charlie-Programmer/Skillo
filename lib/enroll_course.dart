@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'dart:io';
+import 'payment_method.dart';
 
 class EnrollCoursePage extends StatefulWidget {
   final Map course;
@@ -269,7 +270,23 @@ class _EnrollCoursePageState extends State<EnrollCoursePage> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: isEnrolled ? null : enrollCourse,
+                  onPressed: isEnrolled
+                    ? null
+                    : () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PaymentMethodPage(
+                              course: widget.course,
+                            ),
+                          ),
+                        );
+
+                        // If payment succeeds, then enroll
+                        if (result == true) {
+                          await enrollCourse();
+                        }
+                      },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isEnrolled
                         ? Colors.grey
