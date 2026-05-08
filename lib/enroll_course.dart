@@ -28,7 +28,7 @@ class _EnrollCoursePageState extends State<EnrollCoursePage> {
 
     if (enrolledList is List) {
       setState(() {
-        isEnrolled = enrolledList.contains("me"); // replace with user id/email later
+        isEnrolled = enrolledList.contains("me");
       });
     }
   }
@@ -47,7 +47,7 @@ class _EnrollCoursePageState extends State<EnrollCoursePage> {
     List enrolledUsers = course["enrolledUsers"] ?? [];
 
     if (!enrolledUsers.contains("me")) {
-      enrolledUsers.add("me"); // replace with current user email later
+      enrolledUsers.add("me");
     }
 
     course["enrolledUsers"] = enrolledUsers;
@@ -66,76 +66,201 @@ class _EnrollCoursePageState extends State<EnrollCoursePage> {
     );
   }
 
+  Widget _detailRow(IconData icon, String title, String value) {
+    return Row(
+      children: [
+        Icon(icon, color: Color.fromARGB(255, 24, 105, 172)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(color: Colors.grey),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final course = widget.course;
 
+    final enrolledCount = course["enrolled"] ?? 0;
+    final price = course["price"] ?? "0";
+
+    final List weeksList = course["weeks"] ?? [];
+
+    // total weeks = list length
+    final int weeksCount = weeksList.length;
+
+    // total lectures = sum of all lectures in all weeks
+    int lecturesCount = 0;
+
+    for (final week in weeksList) {
+      if (week is Map) {
+        final lectures = week["lectures"];
+
+        if (lectures is List) {
+          lecturesCount += lectures.length;
+        }
+      }
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
-      body: SafeArea(
-        child: Column(
-          children: [
-            /// BACK BUTTON
-            Align(
-              alignment: Alignment.centerLeft,
-              child: IconButton(
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Color.fromARGB(255, 24, 105, 172),
-                ),
-                onPressed: () => Navigator.pop(context),
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    
+                    const SizedBox(height: 10),
+
+                    /// BACK BUTTON (MATCHED STYLE)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          color: Color.fromARGB(255, 24, 105, 172),
+                        ),
+                      ),
+                    ),
+
+            /// COURSE IMAGE (UNCHANGED)
+            const SizedBox(height: 20),
+
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: course["image"] != null &&
+                      course["image"].toString().isNotEmpty
+                  ? Image.file(
+                      File(course["image"]),
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      height: 200,
+                      color: Colors.grey.shade300,
+                      child: const Icon(Icons.image, size: 60),
+                    ),
+            ),
+
+            const SizedBox(height: 15),
+
+            /// TITLE + PRICE
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      course["title"] ?? "",
+                      style: const TextStyle(
+                        fontSize: 34,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 24, 105, 172),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    "₱$price",
+                    style: const TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 24, 105, 172),
+                    ),
+                  ),
+                ],
               ),
             ),
 
-            /// COURSE IMAGE
-            course["image"] != null && course["image"].toString().isNotEmpty
-                ? Image.file(
-                    File(course["image"]),
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  )
-                : Container(
-                    height: 200,
-                    color: Colors.grey.shade300,
-                    child: const Icon(Icons.image, size: 60),
-                  ),
+            const SizedBox(height: 6),
 
-            const SizedBox(height: 20),
-
-            /// TITLE
+            /// ENROLLED USERS
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                course["title"] ?? "",
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 24, 105, 172),
+              child: Row(
+                children: [
+                  const Icon(Icons.people, size: 16, color: Color.fromARGB(255, 24, 105, 172)),
+                  const SizedBox(width: 5),
+                  Text(
+                    "$enrolledCount students already enrolled",
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            /// COURSE DETAILS HEADER
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Course Details",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 24, 105, 172),
+                  ),
                 ),
               ),
             ),
 
             const SizedBox(height: 10),
 
-            /// CATEGORY
-            Text(
-              "Category: ${course["categoryType"] ?? course["category"] ?? ""}",
-              style: const TextStyle(color: Colors.grey),
-            ),
-
-            const SizedBox(height: 20),
-
-            /// DESCRIPTION (if available)
+            /// DESCRIPTION
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 course["description"] ?? "No description available.",
-                textAlign: TextAlign.center,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
               ),
             ),
 
-            const Spacer(),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Read More...",
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 24, 105, 172),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            /// ICON DETAILS
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  _detailRow(Icons.menu_book, "Lectures", "$lecturesCount Lectures"),
+                  const SizedBox(height: 12),
+                 _detailRow(Icons.schedule, "Learning Time", "$weeksCount Weeks"),
+                  const SizedBox(height: 12),
+                  _detailRow(Icons.verified, "Certification", "Online Certificate"),
+                ],
+              ),
+            ),
 
             /// ENROLL BUTTON
             Padding(
@@ -163,6 +288,8 @@ class _EnrollCoursePageState extends State<EnrollCoursePage> {
           ],
         ),
       ),
+      ),
+    ),
     );
   }
 }

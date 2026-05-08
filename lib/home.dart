@@ -599,14 +599,14 @@ Future<void> toggleSave(Box box, dynamic key) async {
   // OWNER
   if (currentEmail == ownerEmail) {
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ViewAnalyticsPage(
-          course: course,
-        ),
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => ViewAnalyticsPage(
+        course: course,
       ),
-    );
+    ),
+  );
 
   } else {
 
