@@ -3,7 +3,6 @@ import 'package:hive/hive.dart';
 import 'dart:io';
 import 'user_store.dart';
 import 'view_course_analytics.dart';
-import 'create_course.dart';
 
 class CourseAnalyticsPage extends StatefulWidget {
   const CourseAnalyticsPage({super.key});

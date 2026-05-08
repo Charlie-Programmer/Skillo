@@ -838,24 +838,20 @@ class _EditCoursePageState extends State<EditCoursePage> {
                             height: 55,
                             child:
                                 ElevatedButton(
-                              onPressed:
-                                  () async {
-
+                              onPressed: () async {
                                 cleanEmptyData();
 
-                                widget.course[
-                                        "isPublished"] =
-                                    true;
+                                widget.course["isPublished"] = true;
+
+                                // 👇 ADD THIS
+                                widget.course["students"] ??= 0;
+                                widget.course["rating"] ??= 4.7;
 
                                 await saveCleanedData();
 
-                                ScaffoldMessenger.of(
-                                        context)
-                                    .showSnackBar(
+                                ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text(
-                                      "Course Published",
-                                    ),
+                                    content: Text("Course Published"),
                                   ),
                                 );
                               },

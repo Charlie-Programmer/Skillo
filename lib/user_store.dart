@@ -4,45 +4,56 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserStore {
-  static List<Map<String, String>> users = [];
+  static List<Map<String, dynamic>> users = [];
 
   static String? currentUserEmail;
 
+  // =========================
+  // GET FILE
+  // =========================
   static Future<File> _getFile() async {
-    final dir = await getApplicationDocumentsDirectory();
+    final dir =
+        await getApplicationDocumentsDirectory();
+
     return File('${dir.path}/users.json');
   }
 
-
+  // =========================
+  // LOAD USERS
+  // =========================
   static Future<void> loadUsers() async {
     final file = await _getFile();
 
     if (!await file.exists()) {
       await file.create(recursive: true);
-      await file.writeAsString(jsonEncode([]));
+
+      await file.writeAsString(
+        jsonEncode([]),
+      );
+
       users = [];
+
       return;
     }
 
-    final content = await file.readAsString();
+    final content =
+        await file.readAsString();
 
     if (content.isEmpty) {
       users = [];
       return;
     }
 
-    final List decoded = jsonDecode(content);
+    final List decoded =
+        jsonDecode(content);
 
-    users = decoded.map<Map<String, String>>((item) {
-      return {
-        "email": item["email"] ?? "",
-        "password": item["password"] ?? "",
-        "fullName": item["fullName"] ?? "",
-        "hasSeenOnboarding": item["hasSeenOnboarding"] ?? "false",
-        "profileImage": item["profileImage"] ?? "",
-        "role": item["role"] ?? "Student",
-      };
-    }).toList();
+    users =
+        decoded
+            .map<Map<String, dynamic>>(
+              (item) => Map<String,
+                  dynamic>.from(item),
+            )
+            .toList();
   }
 
   // =========================
@@ -50,7 +61,10 @@ class UserStore {
   // =========================
   static Future<void> _saveUsers() async {
     final file = await _getFile();
-    await file.writeAsString(jsonEncode(users));
+
+    await file.writeAsString(
+      jsonEncode(users),
+    );
   }
 
   // =========================
@@ -70,36 +84,44 @@ class UserStore {
       "hasSeenOnboarding": "false",
       "profileImage": "",
       "role": "Student",
+      "categories": <String>[],
     });
 
     await _saveUsers();
   }
 
   // =========================
-  // LOGIN
+  // LOGIN USER
   // =========================
   static Future<bool> loginUser({
     required String email,
     required String password,
-}) async {
-  await loadUsers();
+  }) async {
+    await loadUsers();
 
-  for (var user in users) {
-    if (user["email"] == email.trim() &&
-        user["password"] == password) {
+    for (var user in users) {
+      if (user["email"] ==
+              email.trim() &&
+          user["password"] ==
+              password) {
+        currentUserEmail =
+            email.trim();
 
-      // 👇 ADD THIS LINE
-      currentUserEmail = email.trim();
+        final prefs =
+            await SharedPreferences.getInstance();
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString("currentUserEmail", currentUserEmail!);
+        await prefs.setString(
+          "currentUserEmail",
+          currentUserEmail!,
+        );
 
-      return true;
+        return true;
+      }
     }
+
+    return false;
   }
 
-  return false;
-}
   // =========================
   // UPDATE PASSWORD
   // =========================
@@ -110,9 +132,13 @@ class UserStore {
     await loadUsers();
 
     for (var user in users) {
-      if (user["email"] == email.trim()) {
-        user["password"] = newPassword;
+      if (user["email"] ==
+          email.trim()) {
+        user["password"] =
+            newPassword;
+
         await _saveUsers();
+
         return true;
       }
     }
@@ -123,11 +149,15 @@ class UserStore {
   // =========================
   // GET USER
   // =========================
-  static Future<Map<String, String>?> getUser(String email) async {
+  static Future<
+      Map<String, dynamic>?> getUser(
+    String email,
+  ) async {
     await loadUsers();
 
     for (var user in users) {
-      if (user["email"] == email.trim()) {
+      if (user["email"] ==
+          email.trim()) {
         return user;
       }
     }
@@ -136,26 +166,74 @@ class UserStore {
   }
 
   // =========================
-  // CLEAR USERS
+  // GET CURRENT USER
   // =========================
-  static Future<void> clearUsers() async {
-    users.clear();
-    await _saveUsers();
-  }
-  
-  
-    static Future<Map<String, String>?> getCurrentUser() async {
-    if (currentUserEmail == null) return null;
+  static Future<
+      Map<String, dynamic>?>
+  getCurrentUser() async {
+    if (currentUserEmail == null) {
+      return null;
+    }
 
-    return await getUser(currentUserEmail!);
+    return await getUser(
+      currentUserEmail!,
+    );
   }
 
-    static Future<void> setOnboardingSeen(String email) async {
+  // =========================
+  // UPDATE CURRENT USER
+  // =========================
+  static Future<void>
+  updateCurrentUser(
+    Map<String, dynamic> updatedUser,
+  ) async {
+    await loadUsers();
+
+    if (currentUserEmail == null) {
+      return;
+    }
+
+    final index = users.indexWhere(
+      (u) =>
+          u["email"] ==
+          currentUserEmail,
+    );
+
+    if (index != -1) {
+      users[index] = updatedUser;
+
+      currentUserEmail =
+          updatedUser["email"];
+
+      final prefs =
+          await SharedPreferences.getInstance();
+
+      if (currentUserEmail != null) {
+        await prefs.setString(
+          "currentUserEmail",
+          currentUserEmail!,
+        );
+      }
+
+      await _saveUsers();
+    }
+  }
+
+  // =========================
+  // SET ONBOARDING
+  // =========================
+  static Future<void>
+  setOnboardingSeen(
+    String email,
+  ) async {
     await loadUsers();
 
     for (var user in users) {
-      if (user["email"] == email.trim()) {
-        user["hasSeenOnboarding"] = "true";
+      if (user["email"] ==
+          email.trim()) {
+        user["hasSeenOnboarding"] =
+            "true";
+
         break;
       }
     }
@@ -163,32 +241,44 @@ class UserStore {
     await _saveUsers();
   }
 
-  static Future<void> updateProfileImage({
-  required String email,
-  required String imagePath,
-}) async {
-  await loadUsers();
+  // =========================
+  // UPDATE PROFILE IMAGE
+  // =========================
+  static Future<void>
+  updateProfileImage({
+    required String email,
+    required String imagePath,
+  }) async {
+    await loadUsers();
 
-  for (var user in users) {
-    if (user["email"] == email.trim()) {
-      user["profileImage"] = imagePath;
-      break;
+    for (var user in users) {
+      if (user["email"] ==
+          email.trim()) {
+        user["profileImage"] =
+            imagePath;
+
+        break;
+      }
     }
+
+    await _saveUsers();
   }
 
-  await _saveUsers();
-}
-
- //user role update
-  static Future<void> updateUserRole({
+  // =========================
+  // UPDATE USER ROLE
+  // =========================
+  static Future<void>
+  updateUserRole({
     required String email,
     required String role,
   }) async {
     await loadUsers();
 
     for (var user in users) {
-      if (user["email"] == email.trim()) {
+      if (user["email"] ==
+          email.trim()) {
         user["role"] = role;
+
         break;
       }
     }
@@ -196,18 +286,40 @@ class UserStore {
     await _saveUsers();
   }
 
-  static Future<void> clearCurrentUser() async {
-  currentUserEmail = null;
+  // =========================
+  // CLEAR USERS
+  // =========================
+  static Future<void> clearUsers() async {
+    users.clear();
 
-  // If you're using SharedPreferences:
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.remove("currentUserEmail");
+    await _saveUsers();
+  }
+
+  // =========================
+  // CLEAR CURRENT USER
+  // =========================
+  static Future<void>
+  clearCurrentUser() async {
+    currentUserEmail = null;
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
+    await prefs.remove(
+      "currentUserEmail",
+    );
+  }
+
+  // =========================
+  // RESTORE SESSION
+  // =========================
+  static Future<void>
+  restoreSession() async {
+    final prefs =
+        await SharedPreferences.getInstance();
+
+    currentUserEmail = prefs.getString(
+      "currentUserEmail",
+    );
+  }
 }
-
-  static Future<void> restoreSession() async {
-  final prefs = await SharedPreferences.getInstance();
-  currentUserEmail = prefs.getString("currentUserEmail");
-}
-
-}
-
