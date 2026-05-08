@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'user_store.dart';
 import 'course_categories.dart';
+import 'dart:io';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() =>
-      _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState
-    extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> {
   String fullName = "Guest";
-
   List<String> selectedCategories = [];
 
   Key _animationKey = UniqueKey();
@@ -24,280 +23,414 @@ class _HomeScreenState
     loadUser();
   }
 
+  /// ✅ FIXED: now always loads user-selected categories
   void loadUser() async {
-    final user =
-        await UserStore.getCurrentUser();
+    final user = await UserStore.getCurrentUser();
 
     if (!mounted) return;
 
     setState(() {
-      fullName =
-          user?["fullName"] ?? "Guest";
-
+      fullName = user?["fullName"] ?? "Guest";
       selectedCategories =
-          List<String>.from(
-        user?["categories"] ?? [],
-      );
+          List<String>.from(user?["categories"] ?? []);
     });
   }
 
   Future<void> updateUserCategories() async {
-    final user =
-        await UserStore.getCurrentUser();
+    final user = await UserStore.getCurrentUser();
 
     if (user != null) {
-      user["categories"] =
-          selectedCategories;
-
-      await UserStore
-          .updateCurrentUser(user);
+      user["categories"] = selectedCategories;
+      await UserStore.updateCurrentUser(user);
     }
+  }
+
+  /// ✅ SAFE RATING
+  double getRating(Map course) {
+    final rating = course["rating"];
+    if (rating is int) return rating.toDouble();
+    if (rating is double) return rating;
+    if (rating is String) return double.tryParse(rating) ?? 0.0;
+    return 0.0;
+  }
+
+  /// ✅ SAFE ENROLLED
+  int getEnrolled(Map course) {
+    final enrolled = course["enrolled"];
+    if (enrolled is int) return enrolled;
+    if (enrolled is double) return enrolled.toInt();
+    if (enrolled is String) return int.tryParse(enrolled) ?? 0;
+    return 0;
   }
 
   @override
   Widget build(BuildContext context) {
+    final coursesBox = Hive.box('coursesBox');
+
+    final allCourses = coursesBox.values.toList();
+
+    final availableCategories = allCourses
+        .map((e) =>
+            (e as Map)["categoryType"] ?? e["category"] ?? "Uncategorized")
+        .toSet()
+        .toList();
+
+    /// ✅ FIXED: show ALL selected categories (no filtering removal)
+    final filteredSelectedCategories = selectedCategories;
+
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: TweenAnimationBuilder<double>(
-          key: _animationKey,
-          duration:
-              const Duration(milliseconds: 500),
-          curve: Curves.easeOut,
-          tween: Tween(begin: 0, end: 1),
-          builder: (context, value, child) {
-            return Opacity(
-              opacity: value,
-              child: Transform.translate(
-                offset:
-                    Offset(0, 20 * (1 - value)),
-                child: child,
-              ),
-            );
-          },
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
           child: SingleChildScrollView(
-            physics:
-                const BouncingScrollPhysics(),
+            physics: const BouncingScrollPhysics(),
             padding:
-                const EdgeInsets.symmetric(
-              horizontal: 16,
-            ),
+                const EdgeInsets.symmetric(horizontal: 16).copyWith(bottom: 20),
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 10),
 
-                /// HEADER
-                Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment
-                          .spaceBetween,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight:
-                              FontWeight.bold,
-                          color: Colors.black,
-                        ),
+                TweenAnimationBuilder<double>(
+                  key: _animationKey,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeOut,
+                  tween: Tween(begin: 0, end: 1),
+                  builder: (context, value, child) {
+                    return Opacity(
+                      opacity: value,
+                      child: Transform.translate(
+                        offset: Offset(0, 20 * (1 - value)),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      /// HEADER
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const TextSpan(
-                              text:
-                                  "Welcome "),
-                          TextSpan(
-                            text: fullName,
-                            style:
-                                const TextStyle(
-                              color: Color.fromARGB(
-                                255,
-                                24,
-                                105,
-                                172,
+                          RichText(
+                            text: TextSpan(
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
                               ),
+                              children: [
+                                const TextSpan(text: "Welcome "),
+                                TextSpan(
+                                  text: fullName,
+                                  style: const TextStyle(
+                                    color: Color.fromARGB(255, 24, 105, 172),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
+                          const Icon(Icons.notifications_none,
+                              color: Color.fromARGB(255, 24, 105, 172)),
                         ],
                       ),
-                    ),
-                    const Icon(
-                      Icons
-                          .notifications_none,
-                      color: Color.fromARGB(
-                        255,
-                        24,
-                        105,
-                        172,
-                      ),
-                    ),
-                  ],
-                ),
 
-                const SizedBox(height: 12),
+                      const SizedBox(height: 12),
 
-                /// SEARCH
-                TextField(
-                  decoration:
-                      InputDecoration(
-                    hintText: "Search",
-                    prefixIcon:
-                        const Icon(
-                      Icons.search,
-                    ),
-                    enabledBorder:
-                        OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius
-                              .circular(25),
-                      borderSide:
-                          const BorderSide(
-                        color: Color.fromARGB(
-                          255,
-                          24,
-                          105,
-                          172,
+                      /// SEARCH
+                      TextField(
+                        decoration: InputDecoration(
+                          hintText: "Search",
+                          prefixIcon: const Icon(Icons.search),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(25),
+                            borderSide: const BorderSide(
+                              color: Color.fromARGB(255, 24, 105, 172),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(25),
+                            borderSide: const BorderSide(
+                              color: Color.fromARGB(255, 24, 105, 172),
+                              width: 2,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                    focusedBorder:
-                        OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius
-                              .circular(25),
-                      borderSide:
-                          const BorderSide(
-                        color: Color.fromARGB(
-                          255,
-                          24,
-                          105,
-                          172,
-                        ),
-                        width: 2,
+
+                      const SizedBox(height: 20),
+
+                      /// CONTINUE WATCHING
+                      _sectionTitle("Continue Watching"),
+                      const SizedBox(height: 10),
+                      _emptyCard("No courses yet", Icons.play_circle_outline),
+
+                      const SizedBox(height: 20),
+
+                      /// CATEGORIES
+                      _sectionTitle(
+                        "Categories",
+                        onSeeAll: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const CourseCategoriesPage(),
+                            ),
+                          );
+                          loadUser(); // refresh after returning
+                        },
                       ),
-                    ),
+                      const SizedBox(height: 10),
+
+                      filteredSelectedCategories.isEmpty
+                          ? _emptyCard(
+                              "No categories selected",
+                              Icons.category_outlined,
+                            )
+                          : SizedBox(
+                              height: 45,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: filteredSelectedCategories.length,
+                                itemBuilder: (context, index) {
+                                  final category =
+                                      filteredSelectedCategories[index];
+
+                                  return GestureDetector(
+                                    onTap: () async {
+                                      setState(() {
+                                        selectedCategories.remove(category);
+                                      });
+                                      await updateUserCategories();
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.only(right: 10),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16),
+                                      decoration: BoxDecoration(
+                                        color: const Color.fromARGB(
+                                            255, 24, 105, 172),
+                                        borderRadius:
+                                            BorderRadius.circular(25),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          category,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+
+                      const SizedBox(height: 20),
+
+                      /// ⭐ Suggestions for You (UNCHANGED)
+                      _sectionTitle("Suggestions for You"),
+                      const SizedBox(height: 10),
+                      _emptyCard(
+                        "No suggestions available",
+                        Icons.lightbulb_outline,
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      /// COURSES
+                      _sectionTitle("Courses"),
+                      const SizedBox(height: 10),
+
+                      ValueListenableBuilder(
+                        valueListenable: coursesBox.listenable(),
+                        builder: (context, Box box, _) {
+                          final courses = box.values.toList();
+
+                          final publishedCourses = courses
+                              .where((c) =>
+                                  (c as Map)["isPublished"] == true)
+                              .map((e) => Map<String, dynamic>.from(e))
+                              .toList();
+
+                          if (publishedCourses.isEmpty) {
+                            return _emptyCard(
+                              "No courses available",
+                              Icons.school_outlined,
+                            );
+                          }
+
+                          return SizedBox(
+                            height: 200,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: publishedCourses.length,
+                              itemBuilder: (context, index) {
+                                final course = publishedCourses[index];
+
+                                final categoryType =
+                                    course["categoryType"] ??
+                                        course["category"] ??
+                                        "Uncategorized";
+
+                                final rating = getRating(course);
+                                final enrolled = getEnrolled(course);
+
+                                return Container(
+                                  width: 190,
+                                  margin:
+                                      const EdgeInsets.only(right: 10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius:
+                                        BorderRadius.circular(14),
+                                    border: Border.all(
+                                        color: Colors.grey.shade300),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black
+                                            .withOpacity(0.05),
+                                        blurRadius: 5,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      /// IMAGE
+                                      ClipRRect(
+                                        borderRadius:
+                                            const BorderRadius.only(
+                                          topLeft: Radius.circular(14),
+                                          topRight: Radius.circular(14),
+                                        ),
+                                        child: SizedBox(
+                                          height: 120,
+                                          width: double.infinity,
+                                          child: (course["image"] != null &&
+                                                  course["image"]
+                                                      .toString()
+                                                      .isNotEmpty)
+                                              ? Image.file(
+                                                  File(course["image"]),
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : const Icon(
+                                                  Icons.image,
+                                                  size: 40,
+                                                  color: Colors.grey,
+                                                ),
+                                        ),
+                                      ),
+
+                                      /// DETAILS
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 6),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              course["title"] ?? "",
+                                              maxLines: 1,
+                                              overflow:
+                                                  TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontWeight:
+                                                    FontWeight.bold,
+                                                fontSize: 13,
+                                                color: Color.fromARGB(
+                                                    255, 24, 105, 172),
+                                              ),
+                                            ),
+
+                                            const SizedBox(height: 6),
+
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 6,
+                                                      vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: const Color.fromARGB(
+                                                        255, 24, 105, 172)
+                                                    .withOpacity(0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              child: Text(
+                                                categoryType,
+                                                style: const TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight:
+                                                      FontWeight.w600,
+                                                  color: Color.fromARGB(
+                                                      255, 24, 105, 172),
+                                                ),
+                                              ),
+                                            ),
+
+                                            const SizedBox(height: 8),
+
+                                            /// ⭐ FINAL DISPLAY (0.0 / 0)
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    const Icon(Icons.star,
+                                                        size: 14,
+                                                        color: Colors.orange),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      rating.toStringAsFixed(1),
+                                                      style: const TextStyle(
+                                                          fontSize: 11),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    const Icon(Icons.people,
+                                                        size: 14,
+                                                        color: Colors.grey),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      "$enrolled",
+                                                      style: const TextStyle(
+                                                          fontSize: 11),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 16),
+                    ],
                   ),
                 ),
-
-                const SizedBox(height: 20),
-
-                _sectionTitle("Continue Watching"),
-
-                const SizedBox(height: 10),
-
-                _emptyCard(
-                  "No courses yet",
-                  Icons.play_circle_outline,
-                ),
-
-                const SizedBox(height: 20),
-
-                _sectionTitle("Categories"),
-
-                const SizedBox(height: 10),
-
-                selectedCategories.isEmpty
-                    ? _emptyCard(
-                        "No categories selected",
-                        Icons
-                            .category_outlined,
-                      )
-                    : SizedBox(
-                        height: 45,
-                        child:
-                            ListView.builder(
-                          scrollDirection:
-                              Axis.horizontal,
-                          itemCount:
-                              selectedCategories
-                                  .length,
-                          itemBuilder:
-                              (context, index) {
-                            final category =
-                                selectedCategories[
-                                    index];
-
-                            return GestureDetector(
-                              onTap: () async {
-                                setState(() {
-                                  selectedCategories
-                                      .remove(
-                                    category,
-                                  );
-                                });
-
-                                await updateUserCategories();
-                              },
-                              child: Container(
-                                margin:
-                                    const EdgeInsets
-                                        .only(
-                                  right: 10,
-                                ),
-                                padding:
-                                    const EdgeInsets
-                                        .symmetric(
-                                  horizontal: 16,
-                                ),
-                                decoration:
-                                    BoxDecoration(
-                                  color:
-                                      const Color
-                                          .fromARGB(
-                                    255,
-                                    24,
-                                    105,
-                                    172,
-                                  ),
-                                  borderRadius:
-                                      BorderRadius
-                                          .circular(
-                                    25,
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    category,
-                                    style:
-                                        const TextStyle(
-                                      color:
-                                          Colors.white,
-                                      fontWeight:
-                                          FontWeight
-                                              .w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-
-                const SizedBox(height: 20),
-
-                _sectionTitle(
-                    "Suggestions for You"),
-
-                const SizedBox(height: 10),
-
-                _emptyCard(
-                  "No suggestions available",
-                  Icons.lightbulb_outline,
-                ),
-
-                const SizedBox(height: 20),
-
-                _sectionTitle("Courses"),
-
-                const SizedBox(height: 10),
-
-                _emptyCard(
-                  "No courses available",
-                  Icons.school_outlined,
-                ),
-
-                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -306,74 +439,43 @@ class _HomeScreenState
     );
   }
 
-  Widget _sectionTitle(String title) {
+  Widget _sectionTitle(String title, {VoidCallback? onSeeAll}) {
     return Row(
-      mainAxisAlignment:
-          MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
-            color:
-                Color.fromARGB(255, 24, 105, 172),
+            color: Color.fromARGB(255, 24, 105, 172),
           ),
         ),
-        GestureDetector(
-          onTap: () async {
-            if (title == "Categories") {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      const CourseCategoriesPage(),
-                ),
-              );
-
-              loadUser();
-            }
-          },
+        InkWell(
+          onTap: onSeeAll,
           child: const Text(
             "See All",
-            style: TextStyle(
-              color: Colors.grey,
-            ),
+            style: TextStyle(color: Colors.grey),
           ),
         ),
       ],
     );
   }
 
-  Widget _emptyCard(
-      String message, IconData icon) {
+  Widget _emptyCard(String message, IconData icon) {
     return Container(
       width: double.infinity,
-      height: 120,
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
       decoration: BoxDecoration(
         color: Colors.grey[100],
-        borderRadius:
-            BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.grey.shade300,
-        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
-        mainAxisAlignment:
-            MainAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            size: 40,
-            color: Colors.grey,
-          ),
+          Icon(icon, size: 40, color: Colors.grey),
           const SizedBox(height: 8),
-          Text(
-            message,
-            style: TextStyle(
-              color: Colors.grey[600],
-            ),
-          ),
+          Text(message, textAlign: TextAlign.center),
         ],
       ),
     );

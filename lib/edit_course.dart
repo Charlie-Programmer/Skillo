@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
@@ -838,27 +837,22 @@ class _EditCoursePageState extends State<EditCoursePage> {
                             height: 55,
                             child:
                                 ElevatedButton(
-                              onPressed:
-                                  () async {
+                              onPressed: () async {
 
-                                cleanEmptyData();
+                                    cleanEmptyData();
 
-                                widget.course[
-                                        "isPublished"] =
-                                    true;
+                                    widget.course["isPublished"] = true;
+                                    widget.course["rating"] = 0.0;
+                                    widget.course["students"] = 0;
 
-                                await saveCleanedData();
+                                    await saveCleanedData();
 
-                                ScaffoldMessenger.of(
-                                        context)
-                                    .showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      "Course Published",
-                                    ),
-                                  ),
-                                );
-                              },
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text("Course Published"),
+                                      ),
+                                    );
+                                  },
                               style:
                                   ElevatedButton
                                       .styleFrom(
