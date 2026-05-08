@@ -17,6 +17,9 @@ class _HomeScreenState extends State<HomeScreen> {
   String fullName = "Guest";
   List<String> selectedCategories = [];
 
+  final TextEditingController _searchController = TextEditingController();
+  String searchText = "";
+
   Key _animationKey = UniqueKey();
 
   @override
@@ -82,6 +85,7 @@ Future<void> toggleSave(Box box, dynamic key) async {
     return 0;
   }
 
+
   @override
   Widget build(BuildContext context) {
     final coursesBox = Hive.box('coursesBox');
@@ -98,7 +102,7 @@ Future<void> toggleSave(Box box, dynamic key) async {
     final filteredSelectedCategories = selectedCategories;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F6FA),
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: GestureDetector(
@@ -160,24 +164,30 @@ Future<void> toggleSave(Box box, dynamic key) async {
 
                       /// SEARCH
                       TextField(
-                        decoration: InputDecoration(
-                          hintText: "Search",
-                          prefixIcon: const Icon(Icons.search),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: const BorderSide(
-                              color: Color.fromARGB(255, 24, 105, 172),
+                          controller: _searchController,
+                          onChanged: (value) {
+                            setState(() {
+                              searchText = value.toLowerCase();
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText: "Search",
+                            prefixIcon: const Icon(Icons.search),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(25),
+                              borderSide: const BorderSide(
+                                color: Color.fromARGB(255, 24, 105, 172),
+                              ),
                             ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: const BorderSide(
-                              color: Color.fromARGB(255, 24, 105, 172),
-                              width: 2,
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(25),
+                              borderSide: const BorderSide(
+                                color: Color.fromARGB(255, 24, 105, 172),
+                                width: 2,
+                              ),
                             ),
                           ),
                         ),
-                      ),
 
                       const SizedBox(height: 20),
 
@@ -270,17 +280,23 @@ Future<void> toggleSave(Box box, dynamic key) async {
                     builder: (context, Box box, _) {
                       final courses = box.values.toList();
 
-                      final publishedCourses = courses
-                          .where((c) => (c as Map)["isPublished"] == true)
-                          .map((e) => Map<String, dynamic>.from(e))
-                          .toList();
+                  final publishedCourses = courses
+                      .where((c) =>
+                          (c as Map)["isPublished"] == true &&
+                          c["title"]
+                              .toString()
+                              .toLowerCase()
+                              .contains(searchText))
+                      .map((e) => Map<String, dynamic>.from(e))
+                      .toList();
 
                       /// ✅ FILTER: only courses matching user selected categories
                       final suggestedCourses = publishedCourses.where((course) {
                         final categoryType =
                             course["categoryType"] ?? course["category"] ?? "Uncategorized";
 
-                      return selectedCategories.contains(categoryType);
+                     return selectedCategories.contains(categoryType) &&
+                    course["title"].toString().toLowerCase().contains(searchText);
                       }).toList();
 
                       if (suggestedCourses.isEmpty) {
@@ -471,11 +487,15 @@ Future<void> toggleSave(Box box, dynamic key) async {
                         builder: (context, Box box, _) {
                           final courses = box.values.toList();
 
-                          final publishedCourses = courses
-                              .where((c) =>
-                                  (c as Map)["isPublished"] == true)
-                              .map((e) => Map<String, dynamic>.from(e))
-                              .toList();
+                      final publishedCourses = courses
+                          .where((c) =>
+                              (c as Map)["isPublished"] == true &&
+                              c["title"]
+                                  .toString()
+                                  .toLowerCase()
+                                  .contains(searchText))
+                          .map((e) => Map<String, dynamic>.from(e))
+                          .toList();
 
                           if (publishedCourses.isEmpty) {
                             return _emptyCard(
@@ -683,17 +703,20 @@ Future<void> toggleSave(Box box, dynamic key) async {
   }
 
   Widget _sectionTitle(String title, {VoidCallback? onSeeAll}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: Color.fromARGB(255, 24, 105, 172),
-          ),
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(
+        title,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+          color: Color.fromARGB(255, 24, 105, 172),
         ),
+      ),
+
+      /// ✅ Only show if onSeeAll is provided
+      if (onSeeAll != null)
         InkWell(
           onTap: onSeeAll,
           child: const Text(
@@ -701,9 +724,9 @@ Future<void> toggleSave(Box box, dynamic key) async {
             style: TextStyle(color: Colors.grey),
           ),
         ),
-      ],
-    );
-  }
+    ],
+  );
+}
 
   Widget _emptyCard(String message, IconData icon) {
     return Container(

@@ -1,22 +1,113 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'dart:io';
 
 class LibraryScreen extends StatefulWidget {
-  const LibraryScreen({super.key});
+  final int initialTab;
+
+  const LibraryScreen({super.key, this.initialTab = 0});
 
   @override
   State<LibraryScreen> createState() => _LibraryScreenState();
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
-  int selectedTab = 0;
+  late int selectedTab;
+
+  Widget _savedCoursesTab() {
+  final box = Hive.box('coursesBox');
+
+  return ValueListenableBuilder(
+    valueListenable: box.listenable(),
+    builder: (context, Box box, _) {
+
+      final entries = box.toMap().entries.toList();
+
+      final savedCourses = entries
+          .where((entry) => entry.value["isSaved"] == true)
+          .toList();
+
+      if (savedCourses.isEmpty) {
+        return const Center(
+          child: Text(
+            "No saved courses yet",
+            style: TextStyle(color: Colors.grey),
+          ),
+        );
+      }
+
+      return ListView.builder(
+        itemCount: savedCourses.length,
+        itemBuilder: (context, index) {
+
+          final entry = savedCourses[index];
+          final key = entry.key;
+          final course = Map.from(entry.value);
+
+          return Card(
+            color: const Color.fromARGB(255, 255, 255, 255),
+            margin: const EdgeInsets.only(bottom: 10),
+            child: ListTile(
+              leading: course["image"] != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.file(
+                        File(course["image"]),
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : const Icon(Icons.image),
+
+              title: Text(
+                course["title"] ?? "No Title",
+                style: const TextStyle(
+                  color: Color.fromARGB(255, 24, 105, 172),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              subtitle: Text(
+                (course["categoryType"] ??
+                        course["category"] ??
+                        "Uncategorized")
+                    .toString(),
+              ),
+
+              trailing: GestureDetector(
+                onTap: () {
+                  final updatedCourse = Map.from(course);
+                  updatedCourse["isSaved"] = false;
+
+                  box.put(key, updatedCourse); // ✅ FIXED
+                },
+                child: const Icon(
+                  Icons.bookmark,
+                  color: Color.fromARGB(255, 24, 105, 172),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
 
   final tabs = ["Saved Courses", "In Progress", "Completed"];
 
   @override
+  void initState() {
+    super.initState();
+    selectedTab = widget.initialTab;
+  }
+
+  @override
   Widget build(BuildContext context) {
-return Container(
-  color: const Color(0xFFF5F6FA),
-  child: SafeArea(
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F6FA),
+      body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -43,66 +134,80 @@ return Container(
 
               const SizedBox(height: 16),
 
-              /// TABS
-                Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: List.generate(tabs.length, (index) {
-                      final isSelected = selectedTab == index;
+              /// TABS (SAFE SCROLLABLE)
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: List.generate(tabs.length, (index) {
+                    final isSelected = selectedTab == index;
 
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              selectedTab = index;
-                            });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedTab = index;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color.fromARGB(255, 24, 105, 172)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: const Color.fromARGB(255, 24, 105, 172),
                             ),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? const Color.fromARGB(255, 24, 105, 172)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: const Color.fromARGB(255, 24, 105, 172),
-                              ),
-                            ),
-                            child: Text(
-                              tabs[index],
-                              style: TextStyle(
-                                color: isSelected ? Colors.white : Colors.black,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          ),
+                          child: Text(
+                            tabs[index],
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
-                      );
-                    }),
-                  ),
+                      ),
+                    );
+                  }),
                 ),
+              ),
 
               const SizedBox(height: 20),
 
-              const Spacer(),
-
-              /// EXPLORE LINK
-              Center(
-                child: Text(
-                  "Explore More Courses",
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 24, 105, 172),
-                    fontWeight: FontWeight.w500,
-                  ),
+              /// TAB CONTENT (FIXED WITH EXPANDED)
+              Expanded(
+                child: IndexedStack(
+                  index: selectedTab,
+                  children: [
+                    _savedCoursesTab(),
+                    _tabContent("In Progress"),
+                    _tabContent("Completed"),
+                  ],
                 ),
               ),
+
+              const SizedBox(height: 10),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _tabContent(String title) {
+    return Center(
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 16,
+          color: Colors.grey[600],
         ),
       ),
     );

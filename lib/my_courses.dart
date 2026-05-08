@@ -203,6 +203,7 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
           },
 
           child: Card(
+            color: const Color.fromARGB(255, 255, 255, 255),
             margin: const EdgeInsets.only(bottom: 15),
             child: Padding(
               padding: const EdgeInsets.all(10),
