@@ -32,9 +32,9 @@ class _CourseAnalyticsPageState extends State<CourseAnalyticsPage> {
     final allCourses = box.values.toList();
 
     setState(() {
-      courses = allCourses.where((course) {
-        return course["email"] == email;
-      }).toList();
+        courses = allCourses.where((course) {
+          return course["ownerEmail"] == email;
+        }).toList();
     });
   }
 

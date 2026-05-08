@@ -21,25 +21,25 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
     loadCourses();
   }
 
-  void loadCourses() {
-    final box = Hive.box('coursesBox');
-    final email = UserStore.currentUserEmail;
+void loadCourses() {
+  final box = Hive.box('coursesBox');
+  final email = UserStore.currentUserEmail;
 
-    if (email == null) {
-      setState(() {
-        courses = [];
-      });
-      return;
-    }
-
-    final allCourses = box.values.toList();
-
+  if (email == null) {
     setState(() {
-      courses = allCourses.where((course) {
-        return course["email"] == email;
-      }).toList();
+      courses = [];
     });
+    return;
   }
+
+  final allCourses = box.values.toList();
+
+  setState(() {
+    courses = allCourses.where((course) {
+      return course["ownerEmail"] == email;
+    }).toList();
+  });
+}
 
   @override
   Widget build(BuildContext context) {

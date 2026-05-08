@@ -6,6 +6,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'view_courses.dart';
 import 'view_suggestions.dart';
 import 'notification.dart';
+import 'view_course_analytics.dart';
+import 'enroll_course.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,6 +15,8 @@ class HomeScreen extends StatefulWidget {
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
+
+String? currentUserEmail;
 
 class _HomeScreenState extends State<HomeScreen> {
   String fullName = "Guest";
@@ -49,6 +53,12 @@ Future<void> toggleSave(Box box, dynamic key) async {
   /// ✅ FIXED: now always loads user-selected categories
   void loadUser() async {
     final user = await UserStore.getCurrentUser();
+
+    setState(() {
+      fullName = user?["fullName"] ?? "Guest";
+      currentUserEmail = user?["email"];
+      selectedCategories = List<String>.from(user?["categories"] ?? []);
+    });
 
     if (!mounted) return;
 
@@ -339,24 +349,59 @@ Future<void> toggleSave(Box box, dynamic key) async {
                             final rating = getRating(course);
                             final enrolled = getEnrolled(course);
 
-                            return Container(
-                              width: 190,
-                              margin: const EdgeInsets.only(right: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: Colors.grey.shade300),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 5,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
+                            return GestureDetector(
+                                  onTap: () async {
+
+                                    final currentUser = await UserStore.getCurrentUser();
+
+                                    final currentEmail = currentUser?["email"];
+
+                                    final ownerEmail = course["ownerEmail"];
+
+                                    // OWNER
+                                    if (currentEmail == ownerEmail) {
+
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => ViewAnalyticsPage(
+                                            course: course,
+                                          ),
+                                        ),
+                                      );
+
+                                    } else {
+
+                                      // NOT OWNER
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => EnrollCoursePage(
+                                            course: course,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: Container(
+                                    width: 190,
+                                    margin: const EdgeInsets.only(right: 10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(color: Colors.grey.shade300),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.05),
+                                          blurRadius: 5,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+        
                                   /// IMAGE
                                   ClipRRect(
                                     borderRadius: const BorderRadius.only(
@@ -472,6 +517,7 @@ Future<void> toggleSave(Box box, dynamic key) async {
                                   ),
                                 ],
                               ),
+                              ),
                             );
                           },
                         ),
@@ -523,12 +569,15 @@ Future<void> toggleSave(Box box, dynamic key) async {
                               scrollDirection: Axis.horizontal,
                               itemCount: publishedCourses.length,
                               itemBuilder: (context, index) {
-                                final coursesMap = box.toMap();
-                                final keys = coursesMap.keys.toList();
-                                final values = coursesMap.values.toList();
+                              final coursesMap = box.toMap();
+                              final keys = coursesMap.keys.toList();
+                              final values = coursesMap.values.toList();
 
-                                final course = values[index];
-                                final key = keys[index];
+                              final course = publishedCourses[index];
+
+                              final key = coursesMap.keys.firstWhere(
+                                (k) => box.get(k)["title"] == course["title"],
+                              );
 
                                 final categoryType =
                                     course["categoryType"] ??
@@ -538,7 +587,41 @@ Future<void> toggleSave(Box box, dynamic key) async {
                                 final rating = getRating(course);
                                 final enrolled = getEnrolled(course);
 
-                                return Container(
+                                return InkWell(
+                                 onTap: () async {
+
+  final currentUser = await UserStore.getCurrentUser();
+
+  final currentEmail = currentUser?["email"];
+
+  final ownerEmail = course["ownerEmail"];
+
+  // OWNER
+  if (currentEmail == ownerEmail) {
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ViewAnalyticsPage(
+          course: course,
+        ),
+      ),
+    );
+
+  } else {
+
+    // NOT OWNER
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EnrollCoursePage(
+          course: course,
+        ),
+      ),
+    );
+  }
+},
+                                  child: Container(
                                   width: 190,
                                   margin:
                                       const EdgeInsets.only(right: 10),
@@ -695,6 +778,7 @@ Future<void> toggleSave(Box box, dynamic key) async {
                                         ),
                                       ),
                                     ],
+                                  ),
                                   ),
                                 );
                               },

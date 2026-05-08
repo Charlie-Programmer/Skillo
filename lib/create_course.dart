@@ -129,36 +129,24 @@ class _CreateCoursePageState
 
     if (email == null) return;
 
-    final newCourse = {
+final currentUser = await UserStore.getCurrentUser();
 
-      "title":
-          titleController.text,
+final newCourse = {
+  "title": titleController.text,
+  "description": descriptionController.text,
+  "category": selectedCategory,
+  "price": priceController.text,
+  "image": _courseImage?.path ?? "",
+  "rating": 0.0,
+  "enrolled": 0,
+  "weeks": [],
+  "isPublished": false,
 
-      "description":
-          descriptionController.text,
+  // OWNER
+  "ownerEmail": currentUser?["email"],
+};
 
-      "category":
-          selectedCategory,
-
-      "price":
-          priceController.text,
-
-      "image":
-          _courseImage?.path ?? "",
-
-      "rating": 0.0,
-
-      "enrolled": 0,
-
-      "weeks": [],
-
-      "isPublished": false,
-
-      // OWNER
-      "email": email,
-    };
-
-    await box.add(newCourse);
+  await box.add(newCourse);
 
     Navigator.pop(context);
   }
