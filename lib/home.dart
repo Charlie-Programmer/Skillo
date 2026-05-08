@@ -23,6 +23,22 @@ class _HomeScreenState extends State<HomeScreen> {
     loadUser();
   }
 
+bool isSaved(Map course) {
+  return course["isSaved"] == true;
+}
+
+Future<void> toggleSave(Box box, dynamic key) async {
+  final course = box.get(key);
+
+  if (course == null) return;
+
+  final updated = Map<String, dynamic>.from(course);
+  final current = updated["isSaved"] == true;
+
+  updated["isSaved"] = !current;
+
+  await box.put(key, updated);
+}
 
   /// ✅ FIXED: now always loads user-selected categories
   void loadUser() async {
@@ -252,7 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         final categoryType =
                             course["categoryType"] ?? course["category"] ?? "Uncategorized";
 
-                        return selectedCategories.contains(categoryType);
+                      return selectedCategories.contains(categoryType);
                       }).toList();
 
                       if (suggestedCourses.isEmpty) {
@@ -269,6 +285,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           itemCount: suggestedCourses.length,
                           itemBuilder: (context, index) {
                             final course = suggestedCourses[index];
+
+                            final coursesMap = box.toMap();
+
+                            final key = coursesMap.keys.firstWhere(
+                              (k) => box.get(k)["title"] == course["title"],
+                            );
 
                             final categoryType =
                                 course["categoryType"] ?? course["category"] ?? "Uncategorized";
@@ -303,17 +325,38 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: SizedBox(
                                       height: 120,
                                       width: double.infinity,
-                                      child: (course["image"] != null &&
-                                              course["image"].toString().isNotEmpty)
-                                          ? Image.file(
-                                              File(course["image"]),
-                                              fit: BoxFit.cover,
-                                            )
-                                          : const Icon(
-                                              Icons.image,
-                                              size: 40,
-                                              color: Colors.grey,
+                                      child: Stack(
+                                        children: [
+
+                                          (course["image"] != null &&
+                                                  course["image"].toString().isNotEmpty)
+                                              ? Image.file(
+                                                  File(course["image"]),
+                                                  fit: BoxFit.cover,
+                                                  width: double.infinity,
+                                                )
+                                              : const Center(
+                                                  child: Icon(Icons.image, size: 40, color: Colors.grey),
+                                                ),
+
+                                          Positioned(
+                                            top: 5,
+                                            right: 5,
+                                            child: IconButton(
+                                              icon: Icon(
+                                                isSaved(course)
+                                                    ? Icons.bookmark
+                                                    : Icons.bookmark_border,
+                                                color: Colors.white,
+                                              ),
+                                              onPressed: () async {
+
+                                                await toggleSave(coursesBox, key);
+                                              },
                                             ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
 
@@ -425,7 +468,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               scrollDirection: Axis.horizontal,
                               itemCount: publishedCourses.length,
                               itemBuilder: (context, index) {
-                                final course = publishedCourses[index];
+                                final coursesMap = box.toMap();
+                                final keys = coursesMap.keys.toList();
+                                final values = coursesMap.values.toList();
+
+                                final course = values[index];
+                                final key = keys[index];
 
                                 final categoryType =
                                     course["categoryType"] ??
@@ -468,19 +516,37 @@ class _HomeScreenState extends State<HomeScreen> {
                                         child: SizedBox(
                                           height: 120,
                                           width: double.infinity,
-                                          child: (course["image"] != null &&
-                                                  course["image"]
-                                                      .toString()
-                                                      .isNotEmpty)
-                                              ? Image.file(
-                                                  File(course["image"]),
-                                                  fit: BoxFit.cover,
-                                                )
-                                              : const Icon(
-                                                  Icons.image,
-                                                  size: 40,
-                                                  color: Colors.grey,
+                                          child: Stack(
+                                            children: [
+
+                                              (course["image"] != null &&
+                                                      course["image"].toString().isNotEmpty)
+                                                  ? Image.file(
+                                                      File(course["image"]),
+                                                      fit: BoxFit.cover,
+                                                      width: double.infinity,
+                                                    )
+                                                  : const Center(
+                                                      child: Icon(Icons.image, size: 40, color: Colors.grey),
+                                                    ),
+
+                                              Positioned(
+                                                top: 5,
+                                                right: 5,
+                                                child: IconButton(
+                                                  icon: Icon(
+                                                    isSaved(course)
+                                                        ? Icons.bookmark
+                                                        : Icons.bookmark_border,
+                                                    color: Colors.white,
+                                                  ),
+                                                onPressed: () async {
+                                                    await toggleSave(coursesBox, key);
+                                                  },
                                                 ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
 
