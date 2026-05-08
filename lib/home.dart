@@ -23,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
     loadUser();
   }
 
+
   /// ✅ FIXED: now always loads user-selected categories
   void loadUser() async {
     final user = await UserStore.getCurrentUser();
@@ -232,13 +233,167 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       const SizedBox(height: 20),
 
-                      /// ⭐ Suggestions for You (UNCHANGED)
-                      _sectionTitle("Suggestions for You"),
-                      const SizedBox(height: 10),
-                      _emptyCard(
-                        "No suggestions available",
-                        Icons.lightbulb_outline,
-                      ),
+                  /// ⭐ Suggestions for You (FILTERED BY USER CATEGORIES)
+                  _sectionTitle("Suggestions for You"),
+                  const SizedBox(height: 10),
+
+                  ValueListenableBuilder(
+                    valueListenable: coursesBox.listenable(),
+                    builder: (context, Box box, _) {
+                      final courses = box.values.toList();
+
+                      final publishedCourses = courses
+                          .where((c) => (c as Map)["isPublished"] == true)
+                          .map((e) => Map<String, dynamic>.from(e))
+                          .toList();
+
+                      /// ✅ FILTER: only courses matching user selected categories
+                      final suggestedCourses = publishedCourses.where((course) {
+                        final categoryType =
+                            course["categoryType"] ?? course["category"] ?? "Uncategorized";
+
+                        return selectedCategories.contains(categoryType);
+                      }).toList();
+
+                      if (suggestedCourses.isEmpty) {
+                        return _emptyCard(
+                          "No suggestions available for your categories",
+                          Icons.lightbulb_outline,
+                        );
+                      }
+
+                      return SizedBox(
+                        height: 200,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: suggestedCourses.length,
+                          itemBuilder: (context, index) {
+                            final course = suggestedCourses[index];
+
+                            final categoryType =
+                                course["categoryType"] ?? course["category"] ?? "Uncategorized";
+
+                            final rating = getRating(course);
+                            final enrolled = getEnrolled(course);
+
+                            return Container(
+                              width: 190,
+                              margin: const EdgeInsets.only(right: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: Colors.grey.shade300),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  /// IMAGE
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(14),
+                                      topRight: Radius.circular(14),
+                                    ),
+                                    child: SizedBox(
+                                      height: 120,
+                                      width: double.infinity,
+                                      child: (course["image"] != null &&
+                                              course["image"].toString().isNotEmpty)
+                                          ? Image.file(
+                                              File(course["image"]),
+                                              fit: BoxFit.cover,
+                                            )
+                                          : const Icon(
+                                              Icons.image,
+                                              size: 40,
+                                              color: Colors.grey,
+                                            ),
+                                    ),
+                                  ),
+
+                                  /// DETAILS (UNCHANGED UI)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 6),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          course["title"] ?? "",
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                            color: Color.fromARGB(255, 24, 105, 172),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: const Color.fromARGB(255, 24, 105, 172)
+                                                .withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          child: Text(
+                                            categoryType,
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color.fromARGB(255, 24, 105, 172),
+                                            ),
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 8),
+
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                const Icon(Icons.star,
+                                                    size: 14, color: Colors.orange),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  rating.toStringAsFixed(1),
+                                                  style: const TextStyle(fontSize: 11),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              children: [
+                                                const Icon(Icons.people,
+                                                    size: 14, color: Colors.grey),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  "$enrolled",
+                                                  style: const TextStyle(fontSize: 11),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
 
                       const SizedBox(height: 20),
 
