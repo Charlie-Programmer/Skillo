@@ -3,6 +3,8 @@ import 'user_store.dart';
 import 'course_categories.dart';
 import 'dart:io';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'view_courses.dart';
+import 'view_suggestions.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -250,7 +252,17 @@ Future<void> toggleSave(Box box, dynamic key) async {
                       const SizedBox(height: 20),
 
                   /// ⭐ Suggestions for You (FILTERED BY USER CATEGORIES)
-                  _sectionTitle("Suggestions for You"),
+                 _sectionTitle(
+                      "Suggestions for You",
+                      onSeeAll: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ViewSuggestionsPage(),
+                          ),
+                        );
+                      },
+                    ),
                   const SizedBox(height: 10),
 
                   ValueListenableBuilder(
@@ -347,7 +359,7 @@ Future<void> toggleSave(Box box, dynamic key) async {
                                                 isSaved(course)
                                                     ? Icons.bookmark
                                                     : Icons.bookmark_border,
-                                                color: Colors.white,
+                                                color: Color.fromARGB(255, 24, 105, 172),
                                               ),
                                               onPressed: () async {
 
@@ -440,8 +452,18 @@ Future<void> toggleSave(Box box, dynamic key) async {
 
                       const SizedBox(height: 20),
 
-                      /// COURSES
-                      _sectionTitle("Courses"),
+                        /// COURSES
+                        _sectionTitle(
+                          "Courses",
+                          onSeeAll: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ViewCoursesPage(),
+                              ),
+                            );
+                          },
+                        ),
                       const SizedBox(height: 10),
 
                       ValueListenableBuilder(
@@ -538,7 +560,7 @@ Future<void> toggleSave(Box box, dynamic key) async {
                                                     isSaved(course)
                                                         ? Icons.bookmark
                                                         : Icons.bookmark_border,
-                                                    color: Colors.white,
+                                                    color: Color.fromARGB(255, 24, 105, 172),
                                                   ),
                                                 onPressed: () async {
                                                     await toggleSave(coursesBox, key);
