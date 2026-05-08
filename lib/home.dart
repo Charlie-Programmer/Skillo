@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'view_courses.dart';
 import 'view_suggestions.dart';
+import 'notification.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -155,8 +156,20 @@ Future<void> toggleSave(Box box, dynamic key) async {
                               ],
                             ),
                           ),
-                          const Icon(Icons.notifications_none,
-                              color: Color.fromARGB(255, 24, 105, 172)),
+                          InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const NotificationPage(),
+                                ),
+                              );
+                            },
+                            child: const Icon(
+                              Icons.notifications_none,
+                              color: Color.fromARGB(255, 24, 105, 172),
+                            ),
+                          ),
                         ],
                       ),
 

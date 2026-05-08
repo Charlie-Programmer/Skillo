@@ -847,6 +847,14 @@ class _EditCoursePageState extends State<EditCoursePage> {
 
                                     await saveCleanedData();
 
+                                    final box = Hive.box('notificationsBox');
+
+                                    await box.add({
+                                      "title": "Course Published 🎉",
+                                      "subtitle": "${widget.course["title"]} is now live!",
+                                      "time": DateTime.now().toString(),
+                                    });
+
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text("Course Published"),

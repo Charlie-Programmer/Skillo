@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'user_store.dart'; 
 import 'nav_bar.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class BeTheInstructorPage extends StatefulWidget {
   const BeTheInstructorPage({super.key});
@@ -100,6 +101,17 @@ void submitForm() async {
     email: emailController.text,
     role: "Instructor",
   );
+
+    // ✅ ADD NOTIFICATION HERE
+  final box = Hive.box('notificationsBox');
+
+  await box.add({
+    "title": "Instructor Approved 🎉",
+    "subtitle": "Congratulations! You are now an Instructor.",
+    "time": DateTime.now().toString(),
+  });
+
+  await box.flush();
 
   if (!mounted) return;
 
