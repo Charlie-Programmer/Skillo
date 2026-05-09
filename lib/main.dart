@@ -9,10 +9,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-
   await Hive.openBox('coursesBox');
   await Hive.openBox('notificationsBox');
-
   await UserStore.restoreSession();
 
   runApp(const MyApp());
@@ -39,10 +37,8 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   bool _obscurePassword = true;
-
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
   String? _emailError;
   String? _passwordError;
 

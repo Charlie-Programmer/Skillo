@@ -55,9 +55,11 @@ class _NotificationPageState extends State<NotificationPage> {
                   builder: (context, Box box, _) {
                     final userEmail = UserStore.currentUserEmail;
 
-                    final notifications = box.values
-                        .where((notif) => notif["user"] == userEmail)
-                        .toList();
+              final notifications = box.values
+                  .where((notif) => notif["user"] == userEmail)
+                  .toList()
+                  .reversed
+                  .toList();
 
                     if (notifications.isEmpty) {
                       return _buildEmptyState(context);

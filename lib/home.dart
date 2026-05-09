@@ -89,12 +89,16 @@ Future<void> toggleSave(Box box, dynamic key) async {
 
   /// ✅ SAFE ENROLLED
   int getEnrolled(Map course) {
-    final enrolled = course["enrolled"];
-    if (enrolled is int) return enrolled;
-    if (enrolled is double) return enrolled.toInt();
-    if (enrolled is String) return int.tryParse(enrolled) ?? 0;
-    return 0;
+
+  final enrolledUsers =
+      course["enrolledUsers"];
+
+  if (enrolledUsers is List) {
+    return enrolledUsers.length;
   }
+
+  return 0;
+}
 
 
   @override

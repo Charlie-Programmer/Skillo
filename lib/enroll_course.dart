@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'dart:io';
 import 'payment_method.dart';
+import 'user_store.dart';
 
 class EnrollCoursePage extends StatefulWidget {
   final Map course;
@@ -25,14 +26,24 @@ class _EnrollCoursePageState extends State<EnrollCoursePage> {
   }
 
   void checkEnrollment() {
-    final enrolledList = widget.course["enrolledUsers"];
 
-    if (enrolledList is List) {
-      setState(() {
-        isEnrolled = enrolledList.contains("me");
-      });
-    }
+  final currentEmail =
+      UserStore.currentUserEmail;
+
+  final enrolledList =
+      widget.course["enrolledUsers"];
+
+  if (enrolledList is List) {
+
+    setState(() {
+
+      isEnrolled =
+          enrolledList.contains(
+            currentEmail,
+          );
+    });
   }
+}
 
   Future<void> enrollCourse() async {
     final box = Hive.box('coursesBox');
@@ -45,16 +56,21 @@ class _EnrollCoursePageState extends State<EnrollCoursePage> {
 
     final course = Map<String, dynamic>.from(widget.course);
 
-    List enrolledUsers = course["enrolledUsers"] ?? [];
+    final currentEmail =
+    UserStore.currentUserEmail;
 
-    if (!enrolledUsers.contains("me")) {
-      enrolledUsers.add("me");
-    }
+List enrolledUsers =
+    List.from(
+      course["enrolledUsers"] ?? [],
+    );
 
-    course["enrolledUsers"] = enrolledUsers;
+if (!enrolledUsers.contains(currentEmail)) {
 
-    int enrolledCount = course["enrolled"] ?? 0;
-    course["enrolled"] = enrolledCount + 1;
+  enrolledUsers.add(currentEmail);
+}
+
+course["enrolledUsers"] =
+    enrolledUsers;
 
     await box.put(key, course);
 
@@ -90,7 +106,13 @@ class _EnrollCoursePageState extends State<EnrollCoursePage> {
   Widget build(BuildContext context) {
     final course = widget.course;
 
-    final enrolledCount = course["enrolled"] ?? 0;
+    final enrolledUsers =
+    List.from(
+      course["enrolledUsers"] ?? [],
+    );
+
+    final enrolledCount = enrolledUsers.length;
+    
     final price = course["price"] ?? "0";
 
     final List weeksList = course["weeks"] ?? [];

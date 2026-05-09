@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
+import 'user_store.dart';
 
 class EditCoursePage extends StatefulWidget {
   final Map course;
@@ -213,14 +214,33 @@ class _EditCoursePageState extends State<EditCoursePage> {
   // ================= SAVE BUTTON =================
   void saveCourse() async {
 
-    await saveCleanedData();
+  await saveCleanedData();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Changes Saved"),
-      ),
-    );
+  // CHECK IF COURSE IS PUBLISHED
+  final isPublished =
+      widget.course["isPublished"] == true;
+
+  // NOTIFICATION
+  if (isPublished) {
+
+    final notificationBox =
+        Hive.box('notificationsBox');
+
+    await notificationBox.add({
+      "user": UserStore.currentUserEmail,
+      "title": "Course Updated ✏️",
+      "subtitle":
+          "${widget.course["title"]} has been updated.",
+      "time": DateTime.now().toString(),
+    });
   }
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text("Changes Saved"),
+    ),
+  );
+}
 
   // ================= ADD WEEK =================
   void addWeek() {
@@ -839,28 +859,49 @@ class _EditCoursePageState extends State<EditCoursePage> {
                                 ElevatedButton(
                               onPressed: () async {
 
-                                    cleanEmptyData();
+                              cleanEmptyData();
 
-                                    widget.course["isPublished"] = true;
-                                    widget.course["rating"] = 0.0;
-                                    widget.course["students"] = 0;
+                              // CHECK IF ALREADY PUBLISHED
+                              final alreadyPublished =
+                                  widget.course["isPublished"] == true;
 
-                                    await saveCleanedData();
+                              // IF ALREADY PUBLISHED
+                              if (alreadyPublished) {
 
-                                    final box = Hive.box('notificationsBox');
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Course is already published",
+                                    ),
+                                  ),
+                                );
 
-                                    await box.add({
-                                      "title": "Course Published 🎉",
-                                      "subtitle": "${widget.course["title"]} is now live!",
-                                      "time": DateTime.now().toString(),
-                                    });
+                                return;
+                              }
 
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text("Course Published"),
-                                      ),
-                                    );
-                                  },
+                              // FIRST TIME PUBLISH
+                              widget.course["isPublished"] = true;
+                              widget.course["rating"] = 0.0;
+                              widget.course["students"] = 0;
+
+                              await saveCleanedData();
+
+                              final box = Hive.box('notificationsBox');
+
+                              await box.add({
+                                "user": UserStore.currentUserEmail,
+                                "title": "Course Published 🎉",
+                                "subtitle":
+                                    "${widget.course["title"]} is now live!",
+                                "time": DateTime.now().toString(),
+                              });
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Course Published"),
+                                ),
+                              );
+                            },
                               style:
                                   ElevatedButton
                                       .styleFrom(

@@ -125,10 +125,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       color: Color.fromARGB(255, 24, 105, 172),
                     ),
                   ),
-                  Icon(
-                    Icons.notifications_none,
-                    color: Color.fromARGB(255, 24, 105, 172),
-                  ),
                 ],
               ),
 
