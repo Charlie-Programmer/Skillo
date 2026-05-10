@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'course_enrolled.dart';
 
 class SuccessPayment extends StatelessWidget {
   final Map course;
@@ -69,8 +70,13 @@ class SuccessPayment extends StatelessWidget {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.popUntil(context, (route) => route.isFirst);
+                 onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EnrolledCoursePage(course: course),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 24, 105, 172),

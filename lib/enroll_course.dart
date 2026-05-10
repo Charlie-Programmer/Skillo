@@ -189,7 +189,7 @@ course["enrolledUsers"] =
                     child: Text(
                       course["title"] ?? "",
                       style: const TextStyle(
-                        fontSize: 34,
+                        fontSize: 30,
                         fontWeight: FontWeight.bold,
                         color: Color.fromARGB(255, 24, 105, 172),
                       ),

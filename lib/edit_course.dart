@@ -61,19 +61,13 @@ class _EditCoursePageState extends State<EditCoursePage> {
                   .toString()
                   .trim();
 
-          final video =
-              (lecture["video"] ?? "")
-                  .toString()
-                  .trim();
 
           final pdf =
               (lecture["pdf"] ?? "")
                   .toString()
                   .trim();
 
-          return title.isEmpty ||
-              video.isEmpty ||
-              pdf.isEmpty;
+          return title.isEmpty || pdf.isEmpty;
         });
       }
     }
@@ -105,9 +99,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
                 .toString()
                 .trim();
 
-        return title.isNotEmpty &&
-            video.isNotEmpty &&
-            pdf.isNotEmpty;
+        return title.isNotEmpty && pdf.isNotEmpty;
       });
 
       return !hasValidLecture;
@@ -160,29 +152,6 @@ class _EditCoursePageState extends State<EditCoursePage> {
     if (picked != null) {
       setState(() {
         selectedImage = File(picked.path);
-      });
-    }
-  }
-
-  // ================= PICK VIDEO =================
-  Future<void> pickVideo(
-    int weekIndex,
-    int lectureIndex,
-  ) async {
-
-    FilePickerResult? result =
-        await FilePicker.platform.pickFiles(
-      type: FileType.video,
-    );
-
-    if (result != null) {
-
-      String path =
-          result.files.single.path!;
-
-      setState(() {
-        weeks[weekIndex]["lectures"]
-            [lectureIndex]["video"] = path;
       });
     }
   }
@@ -257,7 +226,6 @@ class _EditCoursePageState extends State<EditCoursePage> {
     setState(() {
       weeks[weekIndex]["lectures"].add({
         "title": "",
-        "video": "",
         "pdf": "",
       });
     });
@@ -559,6 +527,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
                             weeks[weekIndex];
 
                         return Card(
+                          color: Colors.white,
                           margin:
                               const EdgeInsets
                                   .only(
@@ -669,61 +638,6 @@ class _EditCoursePageState extends State<EditCoursePage> {
                                         const SizedBox(
                                             height:
                                                 15),
-
-                                        // VIDEO BUTTON
-                                        SizedBox(
-                                          width: double
-                                              .infinity,
-                                          height: 50,
-                                          child:
-                                              ElevatedButton.icon(
-                                            onPressed:
-                                                () =>
-                                                    pickVideo(
-                                              weekIndex,
-                                              lectureIndex,
-                                            ),
-                                            style:
-                                                ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  const Color.fromARGB(
-                                                      255,
-                                                      24,
-                                                      105,
-                                                      172),
-                                              shape:
-                                                  RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        10),
-                                              ),
-                                            ),
-                                            icon:
-                                                const Icon(
-                                              Icons
-                                                  .video_library,
-                                              color: Colors
-                                                  .white,
-                                            ),
-                                            label:
-                                                Text(
-                                              lecture["video"] ==
-                                                          null ||
-                                                      lecture["video"]
-                                                          .toString()
-                                                          .isEmpty
-                                                  ? "UPLOAD VIDEO"
-                                                  : "VIDEO UPLOADED",
-                                              style:
-                                                  const TextStyle(
-                                                color: Colors
-                                                    .white,
-                                                fontWeight:
-                                                    FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
 
                                         const SizedBox(
                                             height:

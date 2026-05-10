@@ -11,6 +11,7 @@ void main() async {
   await Hive.initFlutter();
   await Hive.openBox('coursesBox');
   await Hive.openBox('notificationsBox');
+  await Hive.openBox('progressBox');
   await UserStore.restoreSession();
 
   runApp(const MyApp());

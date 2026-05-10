@@ -39,30 +39,6 @@ class ViewAnalyticsPage extends StatelessWidget {
     return count;
   }
 
-  // ================= TOTAL VIDEOS =================
-  int getTotalVideos() {
-    int count = 0;
-
-    final weeks = course["weeks"];
-
-    if (weeks == null || weeks is! List) return 0;
-
-    for (var week in weeks) {
-      if (week is Map) {
-        final lectures = week["lectures"];
-
-        if (lectures is List) {
-          for (var lec in lectures) {
-            if ((lec["video"] ?? "").toString().isNotEmpty) {
-              count++;
-            }
-          }
-        }
-      }
-    }
-
-    return count;
-  }
 
   // ================= TOTAL PDFS =================
   int getTotalPdfs() {
@@ -243,14 +219,11 @@ class ViewAnalyticsPage extends StatelessWidget {
                     Row(
                       children: [
                         _buildStatCard(
-                          "▶ Videos",
-                          "${getTotalVideos()}",
-                        ),
-                        const SizedBox(width: 10),
-                        _buildStatCard(
                           "📄 PDFs",
                           "${getTotalPdfs()}",
                         ),
+                        const SizedBox(width: 10),
+                        const Expanded(child: SizedBox()), // spacer only
                       ],
                     ),
 
