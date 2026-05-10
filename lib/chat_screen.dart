@@ -32,6 +32,23 @@ class _ChatScreenState extends State<ChatScreen> {
     _initChat();
   }
 
+  Future<void> _sendLike() async {
+  if (_messagesBox == null || _currentUserEmail.isEmpty) return;
+
+  final messages = _messages;
+  messages.add({
+    "senderEmail": _currentUserEmail,
+    "text": "👍",
+    "timestamp": DateTime.now().toIso8601String(),
+    "read": false,
+  });
+
+  await _messagesBox!.put(_conversationKey, messages);
+  setState(() {});
+  _scrollToBottom();
+}
+
+
   Future<void> _initChat() async {
     final box = await Hive.openBox('messagesBox');
     final currentUser = await UserStore.getCurrentUser();
@@ -338,7 +355,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     builder: (context, value, _) {
                       final hasText = value.text.trim().isNotEmpty;
                       return GestureDetector(
-                        onTap: hasText ? _sendMessage : () {},
+                        onTap: hasText ? _sendMessage : _sendLike,
                         child: Icon(
                           hasText ? Icons.send : Icons.thumb_up,
                           color: const Color.fromARGB(255, 24, 105, 172),
