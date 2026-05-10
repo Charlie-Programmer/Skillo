@@ -243,16 +243,44 @@ Future<void> toggleSave(Box box, dynamic key) async {
                       final box = Hive.box('coursesBox');
                       final progressBox = Hive.box('progressBox');
 
-                          final enrolledCourses = box.values
-                              .where((c) {
-                                final enrolledUsers = (c as Map)["enrolledUsers"];
-                                if (enrolledUsers is! List) return false;
-                                return enrolledUsers
-                                    .map((e) => e.toString())
-                                    .contains(currentUserEmail);
-                              })
-                              .map((e) => Map<String, dynamic>.from(e))
-                              .toList();
+                    final enrolledCourses = box.values.where((c) {
+                      final course = Map<String, dynamic>.from(c as Map);
+
+                      final enrolledUsers = course["enrolledUsers"];
+
+                      // 1. Check if user is enrolled
+                      if (enrolledUsers is! List ||
+                          !enrolledUsers.map((e) => e.toString()).contains(currentUserEmail)) {
+                        return false;
+                      }
+
+                      final title = course["title"] ?? "";
+
+                      // 2. Get progress data
+                      final progressKey = "${currentUserEmail}_${title}_completed";
+                      final saved = progressBox.get(progressKey);
+                      final completedCount = (saved is List) ? saved.length : 0;
+
+                      // 3. Count total lectures
+                      int totalLectures = 0;
+                      final weeks = course["weeks"] ?? [];
+
+                      for (final week in weeks) {
+                        if (week is Map) {
+                          final lectures = week["lectures"];
+                          if (lectures is List) {
+                            totalLectures += lectures.length;
+                          }
+                        }
+                      }
+
+                      // 4. ❌ REMOVE completed courses
+                      if (totalLectures > 0 && completedCount >= totalLectures) {
+                        return false;
+                      }
+
+                      return true;
+                    }).map((e) => Map<String, dynamic>.from(e)).toList();
 
                           if (enrolledCourses.isEmpty) {
                             return _emptyCard("No courses yet", Icons.play_circle_outline);
