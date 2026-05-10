@@ -66,14 +66,12 @@ class ViewAnalyticsPage extends StatelessWidget {
   }
 
   // ================= REVENUE =================
-  double getRevenue() {
-    final price =
-        double.tryParse(course["price"]?.toString() ?? "0") ?? 0;
-
-    final enrolled = course["enrolled"] ?? 0;
-
-    return price * enrolled;
-  }
+double getRevenue() {
+  final price = double.tryParse(course["price"]?.toString() ?? "0") ?? 0;
+  final enrolledUsers = course["enrolledUsers"];
+  final enrolled = (enrolledUsers is List) ? enrolledUsers.length : 0;
+  return price * enrolled;
+}
 
   @override
   Widget build(BuildContext context) {
@@ -191,9 +189,9 @@ class ViewAnalyticsPage extends StatelessWidget {
                           "${course["rating"] ?? 0}",
                         ),
                         const SizedBox(width: 10),
-                        _buildStatCard(
+                       _buildStatCard(
                           "👨‍🎓 Students",
-                          "${course["enrolled"] ?? 0}",
+                          "${(course["enrolledUsers"] is List) ? (course["enrolledUsers"] as List).length : 0}",
                         ),
                       ],
                     ),

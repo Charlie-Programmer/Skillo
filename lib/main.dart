@@ -14,7 +14,7 @@ void main() async {
   await Hive.openBox('progressBox');
   await UserStore.restoreSession();
 
-  runApp(const MyApp());
+  runApp(const MyApp()); 
 }
 
 class MyApp extends StatelessWidget {

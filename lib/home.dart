@@ -8,6 +8,7 @@ import 'view_suggestions.dart';
 import 'notification.dart';
 import 'view_course_analytics.dart';
 import 'enroll_course.dart';
+import 'course_enrolled.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,6 +20,17 @@ class HomeScreen extends StatefulWidget {
 String? currentUserEmail;
 
 class _HomeScreenState extends State<HomeScreen> {
+
+  bool isUserEnrolled(Map course, String? email) {
+  if (email == null) return false;
+
+  final enrolledUsers = course["enrolledUsers"];
+
+  if (enrolledUsers is! List) return false;
+
+  return enrolledUsers.map((e) => e.toString()).contains(email);
+}
+
   String fullName = "Guest";
   List<String> selectedCategories = [];
 
@@ -221,7 +233,168 @@ Future<void> toggleSave(Box box, dynamic key) async {
                       /// CONTINUE WATCHING
                       _sectionTitle("Continue Watching"),
                       const SizedBox(height: 10),
-                      _emptyCard("No courses yet", Icons.play_circle_outline),
+
+                  AnimatedBuilder(
+                    animation: Listenable.merge([
+                      coursesBox.listenable(),
+                      Hive.box('progressBox').listenable(),
+                    ]),
+                    builder: (context, _) {
+                      final box = Hive.box('coursesBox');
+                      final progressBox = Hive.box('progressBox');
+
+                          final enrolledCourses = box.values
+                              .where((c) {
+                                final enrolledUsers = (c as Map)["enrolledUsers"];
+                                if (enrolledUsers is! List) return false;
+                                return enrolledUsers
+                                    .map((e) => e.toString())
+                                    .contains(currentUserEmail);
+                              })
+                              .map((e) => Map<String, dynamic>.from(e))
+                              .toList();
+
+                          if (enrolledCourses.isEmpty) {
+                            return _emptyCard("No courses yet", Icons.play_circle_outline);
+                          }
+
+                          return SizedBox(
+                            height: 220,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: enrolledCourses.length,
+                              itemBuilder: (context, index) {
+                                final course = enrolledCourses[index];
+                                final title = course["title"] ?? "";
+                                final image = course["image"] ?? "";
+
+                                // GET PROGRESS
+                                final progressKey = "${currentUserEmail}_${title}_completed";
+                                final saved = progressBox.get(progressKey);
+                                final completedCount = (saved is List) ? saved.length : 0;
+
+                                // GET TOTAL LECTURES
+                                int totalLectures = 0;
+                                final weeks = course["weeks"] ?? [];
+                                for (final week in weeks) {
+                                  if (week is Map) {
+                                    final lectures = week["lectures"];
+                                    if (lectures is List) totalLectures += lectures.length;
+                                  }
+                                }
+
+                                final progress = totalLectures > 0
+                                    ? completedCount / totalLectures
+                                    : 0.0;
+
+                                final coursesMap = box.toMap();
+                                final key = coursesMap.keys.firstWhere(
+                                  (k) => box.get(k)["title"] == title,
+                                );
+
+                                return GestureDetector(
+                                  onTap: () async {
+                                    final freshCourse =
+                                        Map<String, dynamic>.from(box.get(key) ?? course);
+                                    if (!mounted) return;
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => EnrolledCoursePage(course: freshCourse),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    width: 190,
+                                    margin: const EdgeInsets.only(right: 10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(color: Colors.grey.shade300),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.05),
+                                          blurRadius: 5,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // IMAGE
+                                        ClipRRect(
+                                          borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(14),
+                                            topRight: Radius.circular(14),
+                                          ),
+                                          child: image.isNotEmpty
+                                              ? Image.file(
+                                                  File(image),
+                                                  height: 110,
+                                                  width: double.infinity,
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : Container(
+                                                  height: 110,
+                                                  color: Colors.grey.shade200,
+                                                  child: const Icon(Icons.image,
+                                                      size: 40, color: Colors.grey),
+                                                ),
+                                        ),
+
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 6),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              // TITLE
+                                              Text(
+                                                title,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13,
+                                                  color: Color.fromARGB(255, 24, 105, 172),
+                                                ),
+                                              ),
+
+                                              const SizedBox(height: 6),
+
+                                              // PROGRESS BAR
+                                              LinearProgressIndicator(
+                                                value: progress.toDouble(),
+                                                backgroundColor: Colors.grey.shade200,
+                                                color: const Color.fromARGB(255, 24, 105, 172),
+                                                minHeight: 6,
+                                                borderRadius: BorderRadius.circular(10),
+                                              ),
+
+                                              const SizedBox(height: 4),
+
+                                              // PROGRESS TEXT
+                                              Text(
+                                                "$completedCount / $totalLectures lectures completed",
+                                                style: const TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+  
 
                       const SizedBox(height: 20),
 
@@ -354,39 +527,34 @@ Future<void> toggleSave(Box box, dynamic key) async {
                             final enrolled = getEnrolled(course);
 
                             return GestureDetector(
-                                  onTap: () async {
+                                 onTap: () async {
+  final currentUser = await UserStore.getCurrentUser();
+  final currentEmail = currentUser?["email"];
+  final ownerEmail = course["ownerEmail"];
 
-                                    final currentUser = await UserStore.getCurrentUser();
+  // ✅ Always re-fetch from Hive using the key
+  final freshCourse = Map<String, dynamic>.from(box.get(key) ?? course);
+  final isEnrolled = isUserEnrolled(freshCourse, currentEmail);
 
-                                    final currentEmail = currentUser?["email"];
+  if (!mounted) return;
 
-                                    final ownerEmail = course["ownerEmail"];
+  if (currentEmail == ownerEmail) {
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => ViewAnalyticsPage(course: freshCourse),
+    ));
+    return;
+  }
 
-                                    // OWNER
-                                    if (currentEmail == ownerEmail) {
-
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => ViewAnalyticsPage(
-                                            course: course,
-                                          ),
-                                        ),
-                                      );
-
-                                    } else {
-
-                                      // NOT OWNER
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => EnrollCoursePage(
-                                            course: course,
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  },
+  if (isEnrolled) {
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => EnrolledCoursePage(course: freshCourse),
+    ));
+  } else {
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => EnrollCoursePage(course: freshCourse),
+    ));
+  }
+},
                                   child: Container(
                                     width: 190,
                                     margin: const EdgeInsets.only(right: 10),
@@ -593,36 +761,31 @@ Future<void> toggleSave(Box box, dynamic key) async {
 
                                 return InkWell(
                                  onTap: () async {
-
   final currentUser = await UserStore.getCurrentUser();
-
   final currentEmail = currentUser?["email"];
-
   final ownerEmail = course["ownerEmail"];
 
-  // OWNER
+  // ✅ Always re-fetch from Hive using the key
+  final freshCourse = Map<String, dynamic>.from(box.get(key) ?? course);
+  final isEnrolled = isUserEnrolled(freshCourse, currentEmail);
+
+  if (!mounted) return;
+
   if (currentEmail == ownerEmail) {
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => ViewAnalyticsPage(course: freshCourse),
+    ));
+    return;
+  }
 
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => ViewAnalyticsPage(
-        course: course,
-      ),
-    ),
-  );
-
+  if (isEnrolled) {
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => EnrolledCoursePage(course: freshCourse),
+    ));
   } else {
-
-    // NOT OWNER
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => EnrollCoursePage(
-          course: course,
-        ),
-      ),
-    );
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => EnrollCoursePage(course: freshCourse),
+    ));
   }
 },
                                   child: Container(

@@ -132,15 +132,16 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
+                  onPressed: () async {
+                    final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => SuccessPayment(
-                          course: widget.course,
-                        ),
+                        builder: (context) => SuccessPayment(course: widget.course),
                       ),
                     );
+                    if (result == true && mounted) {
+                      Navigator.pop(context, true); // pass true back to EnrollCoursePage
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromARGB(255, 24, 105, 172),

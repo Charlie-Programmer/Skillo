@@ -3,6 +3,7 @@ import 'package:hive/hive.dart';
 import 'dart:io';
 import 'payment_method.dart';
 import 'user_store.dart';
+import 'course_enrolled.dart';
 
 class EnrollCoursePage extends StatefulWidget {
   final Map course;
@@ -25,22 +26,17 @@ class _EnrollCoursePageState extends State<EnrollCoursePage> {
     checkEnrollment();
   }
 
-  void checkEnrollment() {
+  Future<void> checkEnrollment() async {
+  final currentUser = await UserStore.getCurrentUser();
+  final currentEmail = currentUser?["email"];
 
-  final currentEmail =
-      UserStore.currentUserEmail;
-
-  final enrolledList =
-      widget.course["enrolledUsers"];
+  final enrolledList = widget.course["enrolledUsers"];
 
   if (enrolledList is List) {
-
     setState(() {
-
-      isEnrolled =
-          enrolledList.contains(
-            currentEmail,
-          );
+      isEnrolled = enrolledList
+          .map((e) => e.toString())
+          .contains(currentEmail);
     });
   }
 }
@@ -56,8 +52,8 @@ class _EnrollCoursePageState extends State<EnrollCoursePage> {
 
     final course = Map<String, dynamic>.from(widget.course);
 
-    final currentEmail =
-    UserStore.currentUserEmail;
+  final currentUser = await UserStore.getCurrentUser();
+  final currentEmail = currentUser?["email"];
 
 List enrolledUsers =
     List.from(
@@ -65,14 +61,21 @@ List enrolledUsers =
     );
 
 if (!enrolledUsers.contains(currentEmail)) {
-
   enrolledUsers.add(currentEmail);
 }
 
-course["enrolledUsers"] =
-    enrolledUsers;
+course["enrolledUsers"] = enrolledUsers;
 
     await box.put(key, course);
+
+    // ✅ ADD THIS
+    final notifBox = Hive.box('notificationsBox');
+    await notifBox.add({
+      "user": currentEmail,
+      "title": "Enrollment Successful!",
+      "subtitle": "You have successfully enrolled in ${widget.course["title"]}.",
+    });
+    // ✅ END
 
     setState(() {
       isEnrolled = true;
@@ -305,8 +308,23 @@ course["enrolledUsers"] =
                         );
 
                         // If payment succeeds, then enroll
-                        if (result == true) {
+                       if (result == true) {
                           await enrollCourse();
+
+                          if (!mounted) return;
+
+                          final box = Hive.box('coursesBox');
+
+                          final coursesMap = box.toMap();
+
+                          final key = coursesMap.keys.firstWhere(
+                            (k) => box.get(k)["title"] == widget.course["title"],
+                          );
+
+                          final updatedCourse =
+                              Map<String, dynamic>.from(box.get(key));
+
+                          Navigator.popUntil(context, (route) => route.isFirst);
                         }
                       },
                   style: ElevatedButton.styleFrom(
