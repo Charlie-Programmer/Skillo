@@ -1,5 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:skillo/onboarding_screen.dart';
 import 'user_store.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
+final FirebaseAuth _auth = FirebaseAuth.instance;
+
+Future<UserCredential?> signInWithGoogle() async {
+  try {
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    if (googleUser == null) return null;
+
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
+
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    return await _auth.signInWithCredential(credential);
+  } catch (e) {
+    print("Google Sign-In error: $e");
+    return null;
+  }
+}
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -245,7 +271,16 @@ class _SignUpState extends State<SignUp> {
                 width: double.infinity,
                 height: 50,
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () async {
+                    final userCredential = await signInWithGoogle();
+
+                    if (userCredential != null) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+                      );
+                    }
+                  },
                   icon: Image.asset(
                     'assets/google.png',
                     height: 20,

@@ -5,7 +5,31 @@ import 'reset_password.dart';
 import 'onboarding_screen.dart';
 import 'nav_bar.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
+final FirebaseAuth _auth = FirebaseAuth.instance;
+
+Future<UserCredential?> signInWithGoogle() async {
+  try {
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    if (googleUser == null) return null;
+
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
+
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    return await _auth.signInWithCredential(credential);
+  } catch (e) {
+    print("Google Sign-In error: $e");
+    return null;
+  }
+}
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
@@ -226,7 +250,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             ),
                           );
                         } else {
-                          // 👇 FIRST TIME → SHOW ONBOARDING
+                        
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
@@ -301,7 +325,16 @@ class _SignInScreenState extends State<SignInScreen> {
                 width: double.infinity,
                 height: 50,
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () async {
+                    final userCredential = await signInWithGoogle();
+
+                    if (userCredential != null) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+                      );
+                    }
+                  },
                   icon: Image.asset(
                     'assets/google.png',
                     height: 20,

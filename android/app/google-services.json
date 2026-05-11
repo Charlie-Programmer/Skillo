@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "463349598681",
+    "project_id": "skillo-appsdev",
+    "storage_bucket": "skillo-appsdev.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:463349598681:android:04b9ce36cc9e6fac1431c8",
+        "android_client_info": {
+          "package_name": "com.example.skillo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGpuXdKHkfE1Nd1jATKYxPtr13H_jhZyU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
