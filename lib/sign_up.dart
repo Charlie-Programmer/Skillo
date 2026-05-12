@@ -1,31 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:skillo/onboarding_screen.dart';
 import 'user_store.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-
-final FirebaseAuth _auth = FirebaseAuth.instance;
-
-Future<UserCredential?> signInWithGoogle() async {
-  try {
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
-    if (googleUser == null) return null;
-
-    final GoogleSignInAuthentication googleAuth =
-        await googleUser.authentication;
-
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-
-    return await _auth.signInWithCredential(credential);
-  } catch (e) {
-    print("Google Sign-In error: $e");
-    return null;
-  }
-}
+import 'facebook.dart';
+import 'google.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -81,7 +57,7 @@ class _SignUpState extends State<SignUp> {
                     ),
                     const SizedBox(width: 5),
                     const Text(
-                      "SIGN IN",
+                      "SIGN UP",
                       style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.bold,
@@ -158,8 +134,7 @@ class _SignUpState extends State<SignUp> {
                     ),
                     onPressed: () {
                       setState(() {
-                        _obscureConfirmPassword =
-                            !_obscureConfirmPassword;
+                        _obscureConfirmPassword = !_obscureConfirmPassword;
                       });
                     },
                   ),
@@ -209,7 +184,8 @@ class _SignUpState extends State<SignUp> {
                         email: _emailController.text,
                         password: _passwordController.text,
                       );
-                      UserStore.currentUserEmail = _emailController.text.trim();
+                      UserStore.currentUserEmail =
+                          _emailController.text.trim();
                       Navigator.pop(context);
                     }
                   },
@@ -222,7 +198,7 @@ class _SignUpState extends State<SignUp> {
                     ),
                   ),
                   child: const Text(
-                    "SIGN IN",
+                    "SIGN UP",
                     style: TextStyle(fontSize: 16),
                   ),
                 ),
@@ -235,7 +211,7 @@ class _SignUpState extends State<SignUp> {
                   Expanded(child: Divider()),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text("or Sign In with"),
+                    child: Text("or Sign Up with"),
                   ),
                   Expanded(child: Divider()),
                 ],
@@ -243,17 +219,25 @@ class _SignUpState extends State<SignUp> {
 
               const SizedBox(height: 15),
 
+              // Facebook Button
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const FacebookSignInScreen(),
+                      ),
+                    );
+                  },
                   icon: Image.asset(
                     'assets/facebook.png',
                     width: 21,
                     height: 24,
                   ),
-                  label: const Text("Sign In with Facebook"),
+                  label: const Text("Sign Up with Facebook"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
                         const Color.fromARGB(255, 24, 105, 172),
@@ -267,25 +251,24 @@ class _SignUpState extends State<SignUp> {
 
               const SizedBox(height: 15),
 
+              // Google Button
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: OutlinedButton.icon(
-                  onPressed: () async {
-                    final userCredential = await signInWithGoogle();
-
-                    if (userCredential != null) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-                      );
-                    }
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const GoogleSignInScreen(),
+                      ),
+                    );
                   },
                   icon: Image.asset(
                     'assets/google.png',
                     height: 20,
                   ),
-                  label: const Text("Sign In with Google"),
+                  label: const Text("Sign Up with Google"),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(
                       color: Color.fromARGB(255, 24, 105, 172),
@@ -301,11 +284,13 @@ class _SignUpState extends State<SignUp> {
 
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text("Already have an Account?",
-                    style: TextStyle(
-                      color: Color.fromARGB(255, 0, 0, 0),
-                      fontWeight: FontWeight.w400,
-                    )),
+                child: const Text(
+                  "Already have an Account?",
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 0, 0, 0),
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
               ),
             ],
           ),
